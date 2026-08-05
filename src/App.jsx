@@ -1,0 +1,442 @@
+import React, { useState, useEffect } from 'react';
+import HeaderBanner from './components/HeaderBanner';
+import Navbar from './components/Navbar';
+import SubBar from './components/SubBar';
+import LeftSidebar from './components/LeftSidebar';
+import MainNewsCenter from './components/MainNewsCenter';
+import RightSidebar from './components/RightSidebar';
+import NewsDetailModal from './components/NewsDetailModal';
+import DocumentDetailModal from './components/DocumentDetailModal';
+import AdminPortal from './components/AdminPortal';
+import Footer from './components/Footer';
+
+// Initial Fallback Data to ensure instant load under any environment
+const INITIAL_CATEGORIES = [
+  { id: 1, name: 'Tin tức - Sự kiện', slug: 'tin-tuc-su-kien', articleCount: 3 },
+  { id: 2, name: 'Hoạt động chuyên môn', slug: 'hoat-dong-chuyen-mon', articleCount: 2 },
+  { id: 3, name: 'Hoạt động đoàn thể', slug: 'hoat-dong-doan-the', articleCount: 1 },
+  { id: 4, name: 'Hoạt động ngoại khóa', slug: 'hoat-dong-ngoai-khoa', articleCount: 1 },
+  { id: 5, name: 'Câu lạc bộ', slug: 'cau-lac-bo', articleCount: 1 }
+];
+
+const INITIAL_FEATURED_NEWS = {
+  id: 1,
+  title: 'Lễ kết nạp Đảng viên mới cho cán bộ giáo viên THCS Đồng Tân',
+  slug: 'le-ket-nap-dang-vien-moi',
+  categoryId: 1,
+  categoryName: 'Tin tức - Sự kiện',
+  summary: 'Vào lúc 14 giờ 00, Chi bộ trường THCS Đồng Tân đã long trọng tổ chức Lễ kết nạp Đảng viên cho giáo viên ưu tú có nhiều thành tích xuất sắc.',
+  content: 'Chiều ngày 04/08/2026, Chi bộ Trường THCS Đồng Tân đã tiến hành Lễ kết nạp Đảng viên cho quần chúng ưu tú. Buổi lễ diễn ra trong không khí trang nghiêm, đúng trình tự, thủ tục của Điều lệ Đảng. Đồng chí Bí thư Chi bộ đã trao Quyết định kết nạp và phân công Đảng viên chính thức tiếp tục giúp đỡ đồng chí Đảng viên mới phát huy tinh thần trách nhiệm trong công tác giảng dạy và phong trào thi đua của nhà trường.',
+  image: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&q=80',
+  author: 'Ban Biên Tập THCS Đồng Tân',
+  isFeatured: 1,
+  views: 1250,
+  createdAt: '2026-08-04 08:00:00'
+};
+
+const INITIAL_NEWS_LIST = [
+  INITIAL_FEATURED_NEWS,
+  {
+    id: 2,
+    title: 'Bộ GD&ĐT ban hành Chỉ thị về nhiệm vụ trọng tâm năm học 2026 - 2027',
+    slug: 'bo-gddt-ban-hanh-chi-thi-nhiem-vu-trong-tam',
+    categoryId: 2,
+    categoryName: 'Hoạt động chuyên môn',
+    summary: 'Tập trung nâng cao chất lượng giáo dục toàn diện, đẩy mạnh chuyển đổi số trong công tác quản lý và giảng dạy tại các trường phổ thông.',
+    content: 'Bộ Giáo dục và Đào tạo vừa chính thức ban hành Chỉ thị định hướng nhiệm vụ năm học mới. Trong đó nhấn mạnh đổi mới phương pháp dạy học lấy học sinh làm trung tâm, ứng dụng công nghệ thông tin và AI trong hỗ trợ dạy và học, chú trọng giáo dục đạo đức, kỹ năng sống cho học sinh.',
+    image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80',
+    author: 'Phòng Giáo Dục & Đào Tạo',
+    views: 940,
+    createdAt: '2026-08-03 10:30:00'
+  },
+  {
+    id: 3,
+    title: 'Tiếp nhận thiết bị dạy học môn Vật lý & Sinh học từ Ngân hàng hỗ trợ giáo dục',
+    slug: 'tiep-nhan-thiet-bi-day-hoc-mon-vat-ly',
+    categoryId: 2,
+    categoryName: 'Hoạt động chuyên môn',
+    summary: 'Trường THCS Đồng Tân vừa tiếp nhận lô thiết bị thí nghiệm hiện đại hỗ trợ thực hành môn Vật lý và Khoa học tự nhiên.',
+    content: 'Sáng nay nhà trường đã tiếp nhận đầy đủ trang thiết bị thực hành phục vụ năm học mới. Ban Giám hiệu đã giao Tổ Tự nhiên kiểm kê, đưa vào phòng bộ môn để sẵn sàng phục vụ học sinh trải nghiệm sáng tạo.',
+    image: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&q=80',
+    author: 'Tổ KHTN',
+    views: 780,
+    createdAt: '2026-08-02 14:15:00'
+  },
+  {
+    id: 4,
+    title: 'Giao lưu văn hóa & Học thuật với đoàn Đại biểu Giáo dục quốc tế',
+    slug: 'giao-luu-van-hoa-hoc-thuat',
+    categoryId: 4,
+    categoryName: 'Hoạt động ngoại khóa',
+    summary: 'Chương trình giao lưu Tiếng Anh và trải nghiệm văn hóa truyền thống dành cho học sinh các khối 8 và 9.',
+    content: 'Buổi giao lưu đã mang lại không khí vui tươi, hào hứng cho các em học sinh. Đây là cơ hội tuyệt vời để các em rèn luyện kỹ năng giao tiếp Tiếng Anh và tự tin thể hiện bản sắc văn hóa Việt Nam.',
+    image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80',
+    author: 'Đoàn Đội THCS Đồng Tân',
+    views: 650,
+    createdAt: '2026-08-01 09:00:00'
+  },
+  {
+    id: 5,
+    title: 'Hội thi Giai điệu Tuổi hồng & Ngày hội Thể thao Trường THCS Đồng Tân',
+    slug: 'hoi-thi-giai-dieu-tuoi-hong',
+    categoryId: 3,
+    categoryName: 'Hoạt động đoàn thể',
+    summary: 'Sôi nổi các hoạt động văn nghệ, thể thao chào mừng các ngày lễ lớn của quê hương và đất nước.',
+    content: 'Hội thi tụ hội hơn 20 tiết mục đặc sắc đến từ các chi đội. Ban Giám khảo đánh giá cao sự sáng tạo, tinh thần nhiệt huyết của các thầy cô chủ nhiệm và các em học sinh.',
+    image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80',
+    author: 'Tổng Phụ Trách Đội',
+    views: 1120,
+    createdAt: '2026-07-28 16:00:00'
+  }
+];
+
+const INITIAL_DOCUMENTS = [
+  {
+    id: 1,
+    code: 'TT07/2026/TT-BGDĐT',
+    title: 'Thông tư 07/2026/TT-BGDĐT về Phổ cập giáo dục THCS và Xóa mù chữ năm 2026',
+    category: 'Thông tư BGD&ĐT',
+    issueDate: '04/08/2026',
+    signer: 'Bộ trưởng BGD&ĐT',
+    views: 4830,
+    downloads: 1722
+  },
+  {
+    id: 2,
+    code: 'TT42/2025/TT-BGDĐT',
+    title: 'Quy chế công nhận trường Trung học đạt chuẩn quốc gia cấp độ 2',
+    category: 'Quy chế Nhà trường',
+    issueDate: '15/12/2025',
+    signer: 'Thứ trưởng BGD&ĐT',
+    views: 3410,
+    downloads: 1205
+  },
+  {
+    id: 3,
+    code: 'KH120/KH-THCSĐT',
+    title: 'Kế hoạch công tác giảng dạy & Bồi dưỡng học sinh giỏi năm học 2026 - 2027',
+    category: 'Kế hoạch Nhà trường',
+    issueDate: '01/08/2026',
+    signer: 'Hiệu trưởng THCS Đồng Tân',
+    views: 2900,
+    downloads: 980
+  },
+  {
+    id: 4,
+    code: 'HD05/HD-PGDĐT',
+    title: 'Hướng dẫn tổ chức Lễ Khai giảng & Tuần sinh hoạt tập thể đầu năm học',
+    category: 'Hướng dẫn Phòng GD&ĐT',
+    issueDate: '02/08/2026',
+    signer: 'Trưởng Phòng GD&ĐT',
+    views: 1850,
+    downloads: 640
+  }
+];
+
+const INITIAL_VIDEOS = [
+  {
+    id: 1,
+    title: 'Phim tư liệu: 40 năm truyền thống Dạy tốt - Học tốt THCS Đồng Tân',
+    youtubeId: 'dQw4w9WgXcQ',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=600&q=80',
+    views: 1540
+  },
+  {
+    id: 2,
+    title: 'Hoạt động trải nghiệm sáng tạo STEM môn Sinh - Hóa lớp 9',
+    youtubeId: 'L_LUpnjgPso',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&q=80',
+    views: 920
+  }
+];
+
+const INITIAL_ANNOUNCEMENTS = [
+  { id: 1, content: 'Chào mừng các bạn đến với trang Web chính thức của trường THCS Đồng Tân, Huyện Ứng Hòa, Hà Nội!' },
+  { id: 2, content: 'Thông báo: Lịch tập trung học sinh toàn trường chuẩn bị cho Lễ Khai giảng năm học 2026 - 2027.' },
+  { id: 3, content: 'Danh sách xếp lớp học sinh khối 6 mới trúng tuyển năm học 2026 - 2027 đã được niêm yết.' }
+];
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('home');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  
+  // Data States with Fallback Initialization
+  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+  const [featuredNews, setFeaturedNews] = useState(INITIAL_FEATURED_NEWS);
+  const [newsList, setNewsList] = useState(INITIAL_NEWS_LIST);
+  const [documents, setDocuments] = useState(INITIAL_DOCUMENTS);
+  const [videos, setVideos] = useState(INITIAL_VIDEOS);
+  const [announcements, setAnnouncements] = useState(INITIAL_ANNOUNCEMENTS);
+
+  // Modal States
+  const [selectedArticleId, setSelectedArticleId] = useState(null);
+  const [activeArticle, setActiveArticle] = useState(null);
+  
+  const [selectedDocumentId, setSelectedDocumentId] = useState(null);
+  const [activeDocument, setActiveDocument] = useState(null);
+
+  // Admin Auth State
+  const [token, setToken] = useState(localStorage.getItem('adminToken') || '');
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('adminUser') || 'null'));
+
+  const fetchData = async () => {
+    try {
+      // 1. Fetch categories
+      const catRes = await fetch('/api/news/categories');
+      if (catRes.ok) {
+        const catData = await catRes.json();
+        if (catData.success && catData.data.length > 0) setCategories(catData.data);
+      }
+
+      // 2. Fetch featured news
+      const featRes = await fetch('/api/news/featured');
+      if (featRes.ok) {
+        const featData = await featRes.json();
+        if (featData.success && featData.data) setFeaturedNews(featData.data);
+      }
+
+      // 3. Fetch all news
+      let newsUrl = '/api/news';
+      if (selectedCategory) newsUrl += `?categoryId=${selectedCategory}`;
+      const newsRes = await fetch(newsUrl);
+      if (newsRes.ok) {
+        const newsData = await newsRes.json();
+        if (newsData.success && newsData.data.length > 0) setNewsList(newsData.data);
+      }
+
+      // 4. Fetch documents
+      const docRes = await fetch('/api/documents');
+      if (docRes.ok) {
+        const docData = await docRes.json();
+        if (docData.success && docData.data.length > 0) setDocuments(docData.data);
+      }
+
+      // 5. Fetch videos
+      const vidRes = await fetch('/api/media/videos');
+      if (vidRes.ok) {
+        const vidData = await vidRes.json();
+        if (vidData.success && vidData.data.length > 0) setVideos(vidData.data);
+      }
+
+      // 6. Fetch announcements
+      const annRes = await fetch('/api/announcements');
+      if (annRes.ok) {
+        const annData = await annRes.json();
+        if (annData.success && annData.data.length > 0) setAnnouncements(annData.data);
+      }
+
+    } catch (err) {
+      console.log('API sync status: Using fallback state when offline.');
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedCategory]);
+
+  // Handle Select Article for Modal detail
+  const handleSelectArticle = async (id) => {
+    try {
+      const res = await fetch(`/api/news/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.data) {
+          setActiveArticle(data.data);
+          setSelectedArticleId(id);
+          return;
+        }
+      }
+    } catch (err) {
+      // Fallback
+    }
+    const found = newsList.find(n => n.id === id);
+    if (found) {
+      setActiveArticle(found);
+      setSelectedArticleId(id);
+    }
+  };
+
+  // Handle Select Document for Modal detail
+  const handleSelectDocument = async (id) => {
+    try {
+      const res = await fetch(`/api/documents/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.data) {
+          setActiveDocument(data.data);
+          setSelectedDocumentId(id);
+          return;
+        }
+      }
+    } catch (err) {
+      // Fallback
+    }
+    const found = documents.find(d => d.id === id);
+    if (found) {
+      setActiveDocument(found);
+      setSelectedDocumentId(id);
+    }
+  };
+
+  const handleDownloadDocument = async (id) => {
+    try {
+      await fetch(`/api/documents/${id}/download`, { method: 'POST' });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleLoginSuccess = (newToken, newUser) => {
+    setToken(newToken);
+    setUser(newUser);
+    localStorage.setItem('adminToken', newToken);
+    localStorage.setItem('adminUser', JSON.stringify(newUser));
+  };
+
+  const handleLogout = () => {
+    setToken('');
+    setUser(null);
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+  };
+
+  const handleSearch = async (query) => {
+    if (!query) {
+      fetchData();
+      return;
+    }
+    try {
+      const res = await fetch(`/api/news?q=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setNewsList(data.data);
+          return;
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    // Fallback search filter
+    const filtered = newsList.filter(n => n.title.toLowerCase().includes(query.toLowerCase()));
+    setNewsList(filtered);
+  };
+
+  return (
+    <div className="site-container">
+      {/* Top Header Banner */}
+      <HeaderBanner />
+
+      {/* Main Navbar */}
+      <Navbar 
+        activeTab={activeTab} 
+        setActiveTab={(tab) => {
+          setActiveTab(tab);
+          setSelectedCategory(null);
+        }} 
+        onOpenAdmin={() => setActiveTab('admin')} 
+      />
+
+      {/* SubBar (Realtime clock + Marquee ticker + Search) */}
+      <SubBar announcements={announcements} onSearch={handleSearch} />
+
+      {/* Dynamic Content Views */}
+      {activeTab === 'admin' ? (
+        <div style={{ padding: '20px' }}>
+          <AdminPortal 
+            token={token} 
+            user={user} 
+            onLogin={handleLoginSuccess} 
+            onLogout={handleLogout} 
+            categories={categories}
+            onRefreshData={fetchData}
+          />
+        </div>
+      ) : activeTab === 'documents' ? (
+        <div style={{ padding: '20px' }}>
+          <div className="widget-box">
+            <div className="widget-header orange">
+              <span>📄 TRA CỨU VĂN BẢN CHỈ ĐẠO & QUY CHẾ THCS ĐỒNG TÂN</span>
+            </div>
+            <div className="widget-body">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                {documents.map((doc) => (
+                  <div key={doc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+                    <div>
+                      <span style={{ fontSize: '12px', background: '#0056a6', color: 'white', padding: '2px 8px', borderRadius: '3px', fontWeight: '700' }}>
+                        {doc.code}
+                      </span>
+                      <h3 style={{ fontSize: '15px', color: '#003a73', marginTop: '6px', cursor: 'pointer' }} onClick={() => handleSelectDocument(doc.id)}>
+                        {doc.title}
+                      </h3>
+                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+                        📅 Ban hành: {doc.issueDate} | ✍️ Người ký: {doc.signer} | 📂 {doc.category}
+                      </div>
+                    </div>
+                    <button 
+                      style={{ background: '#0284c7', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', whiteSpace: 'nowrap' }}
+                      onClick={() => handleSelectDocument(doc.id)}
+                    >
+                      Xem & Tải về
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Standard 3 Column Portal Layout */
+        <div className="main-layout">
+          <LeftSidebar 
+            categories={categories} 
+            latestNews={newsList} 
+            selectedCategory={selectedCategory} 
+            onSelectCategory={(catId) => setSelectedCategory(catId)}
+            onSelectArticle={handleSelectArticle}
+          />
+
+          <MainNewsCenter 
+            featuredArticle={featuredNews || newsList[0]} 
+            secondaryArticles={newsList.slice(1, 4)} 
+            allArticles={newsList}
+            onSelectArticle={handleSelectArticle}
+          />
+
+          <RightSidebar 
+            videos={videos} 
+            documents={documents} 
+            onSelectDocument={handleSelectDocument}
+          />
+        </div>
+      )}
+
+      {/* Modal View Detail News */}
+      {selectedArticleId && activeArticle && (
+        <NewsDetailModal 
+          article={activeArticle} 
+          onClose={() => {
+            setSelectedArticleId(null);
+            setActiveArticle(null);
+          }} 
+        />
+      )}
+
+      {/* Modal View Detail Document */}
+      {selectedDocumentId && activeDocument && (
+        <DocumentDetailModal 
+          document={activeDocument} 
+          onClose={() => {
+            setSelectedDocumentId(null);
+            setActiveDocument(null);
+          }}
+          onDownload={handleDownloadDocument}
+        />
+      )}
+
+      {/* Footer */}
+      <Footer />
+    </div>
+  );
+}
