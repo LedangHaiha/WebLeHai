@@ -7,6 +7,7 @@ import MainNewsCenter from './components/MainNewsCenter';
 import RightSidebar from './components/RightSidebar';
 import NewsDetailModal from './components/NewsDetailModal';
 import DocumentDetailModal from './components/DocumentDetailModal';
+import QuickUploadModal from './components/QuickUploadModal';
 import AdminPortal from './components/AdminPortal';
 import IntroView from './components/IntroView';
 import AlbumsView from './components/AlbumsView';
@@ -105,7 +106,8 @@ const INITIAL_DOCUMENTS = [
     issueDate: '04/08/2026',
     signer: 'Bộ trưởng BGD&ĐT',
     views: 4830,
-    downloads: 1722
+    downloads: 1722,
+    fileUrl: '#'
   },
   {
     id: 2,
@@ -115,7 +117,8 @@ const INITIAL_DOCUMENTS = [
     issueDate: '15/12/2025',
     signer: 'Thứ trưởng BGD&ĐT',
     views: 3410,
-    downloads: 1205
+    downloads: 1205,
+    fileUrl: '#'
   },
   {
     id: 3,
@@ -125,7 +128,8 @@ const INITIAL_DOCUMENTS = [
     issueDate: '01/08/2026',
     signer: 'Hiệu trưởng THCS Đồng Tân',
     views: 2900,
-    downloads: 980
+    downloads: 980,
+    fileUrl: '#'
   },
   {
     id: 4,
@@ -135,7 +139,8 @@ const INITIAL_DOCUMENTS = [
     issueDate: '02/08/2026',
     signer: 'Trưởng Phòng GD&ĐT',
     views: 1850,
-    downloads: 640
+    downloads: 640,
+    fileUrl: '#'
   }
 ];
 
@@ -180,6 +185,10 @@ export default function App() {
   
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
   const [activeDocument, setActiveDocument] = useState(null);
+
+  // Quick Upload Modal State
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadDefaultTab, setUploadDefaultTab] = useState('docs');
 
   // Admin Auth State
   const [token, setToken] = useState(localStorage.getItem('adminToken') || '');
@@ -233,6 +242,11 @@ export default function App() {
   useEffect(() => {
     fetchData();
   }, [selectedCategory]);
+
+  const handleOpenUpload = (tab = 'docs') => {
+    setUploadDefaultTab(tab);
+    setShowUploadModal(true);
+  };
 
   const handleSelectArticle = async (id) => {
     try {
@@ -327,6 +341,7 @@ export default function App() {
           setSelectedCategory(null);
         }} 
         onOpenAdmin={() => setActiveTab('admin')} 
+        onOpenUpload={() => handleOpenUpload('docs')}
       />
 
       <SubBar announcements={announcements} onSearch={handleSearch} />
@@ -350,7 +365,7 @@ export default function App() {
       ) : activeTab === 'videos' ? (
         <VideosView videos={videos} />
       ) : activeTab === 'resources' ? (
-        <ResourcesView />
+        <ResourcesView resources={[]} onOpenUpload={handleOpenUpload} />
       ) : activeTab === 'schedule' ? (
         <ScheduleView />
       ) : activeTab === 'contact' ? (
@@ -358,8 +373,15 @@ export default function App() {
       ) : activeTab === 'documents' ? (
         <div style={{ padding: '20px' }}>
           <div className="widget-box">
-            <div className="widget-header orange">
+            <div className="widget-header orange" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>📄 TRA CỨU VĂN BẢN CHỈ ĐẠO & QUY CHẾ THCS ĐỒNG TÂN</span>
+
+              <button 
+                style={{ background: '#16a34a', color: 'white', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12px' }}
+                onClick={() => handleOpenUpload('docs')}
+              >
+                📤 TẢI VĂN BẢN MỚI LÊN
+              </button>
             </div>
             <div className="widget-body">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -414,6 +436,7 @@ export default function App() {
         </div>
       )}
 
+      {/* Modal View Detail News */}
       {selectedArticleId && activeArticle && (
         <NewsDetailModal 
           article={activeArticle} 
@@ -424,6 +447,7 @@ export default function App() {
         />
       )}
 
+      {/* Modal View Detail Document */}
       {selectedDocumentId && activeDocument && (
         <DocumentDetailModal 
           document={activeDocument} 
@@ -432,6 +456,16 @@ export default function App() {
             setActiveDocument(null);
           }}
           onDownload={handleDownloadDocument}
+        />
+      )}
+
+      {/* Quick Upload Popup Modal */}
+      {showUploadModal && (
+        <QuickUploadModal 
+          defaultTab={uploadDefaultTab} 
+          categories={categories} 
+          onClose={() => setShowUploadModal(false)}
+          onSuccess={fetchData}
         />
       )}
 

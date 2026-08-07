@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { BookOpen, Download, Search, ExternalLink, FileText } from 'lucide-react';
+import { BookOpen, Download, Search, ExternalLink, Upload } from 'lucide-react';
 
-export default function ResourcesView({ resources = [] }) {
+export default function ResourcesView({ resources = [], onOpenUpload }) {
   const [filterType, setFilterType] = useState('Tất cả');
   const [search, setSearch] = useState('');
 
@@ -74,11 +74,19 @@ export default function ResourcesView({ resources = [] }) {
   return (
     <div style={{ padding: '20px', maxWidth: '1100px', margin: '0 auto' }}>
       <div className="widget-box">
-        <div className="widget-header">
+        <div className="widget-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <BookOpen size={18} /> KHO TÀI NGUYÊN GIẢNG DẠY & ĐỀ THI - THCS ĐỒNG TÂN
           </span>
+
+          <button 
+            style={{ background: '#16a34a', color: 'white', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}
+            onClick={() => onOpenUpload && onOpenUpload('resources')}
+          >
+            <Upload size={14} /> 📤 ĐĂNG TẢI ĐỀ THI / GIÁO ÁN MỚI
+          </button>
         </div>
+
         <div className="widget-body" style={{ padding: '20px' }}>
           
           <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap' }}>
