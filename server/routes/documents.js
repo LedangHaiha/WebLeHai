@@ -38,7 +38,6 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Không tìm thấy văn bản' });
     }
 
-    // Increment view count
     await run('UPDATE documents SET views = views + 1 WHERE id = ?', [id]);
     doc.views += 1;
 
@@ -62,18 +61,18 @@ router.post('/:id/download', async (req, res) => {
 // POST /api/documents (Admin Create)
 router.post('/', authGuard, async (req, res) => {
   try {
-    const { code, title, category, issueDate, signer, fileUrl } = req.body;
+    const { code, title, category, issueDate, signer, fileUrl, externalLink } = req.body;
     if (!code || !title || !issueDate) {
       return res.status(400).json({ success: false, message: 'Vui lòng nhập số hiệu, trích yếu tiêu đề và ngày ban hành văn bản' });
     }
 
     const result = await run(
-      `INSERT INTO documents (code, title, category, issueDate, signer, fileUrl, views, downloads) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [code, title, category || 'Thông tư / Quy chế', issueDate, signer || 'THCS Đồng Tân', fileUrl || '#', 10, 1]
+      `INSERT INTO documents (code, title, category, issueDate, signer, fileUrl, externalLink, views, downloads) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [code, title, category || 'Thông tư BGD&ĐT', issueDate, signer || 'THCS Đồng Tân', fileUrl || '', externalLink || '', 10, 1]
     );
 
-    res.json({ success: true, message: 'Thêm văn bản mới thành công!', id: result.id });
+    res.json({ success: true, message: 'Thêm văn bản mới thành công!', id: result.id, fileUrl, externalLink });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Lỗi khi phát hành văn bản mới' });
   }

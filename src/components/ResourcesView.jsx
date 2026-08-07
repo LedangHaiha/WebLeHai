@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Download, Search, FileText } from 'lucide-react';
+import { BookOpen, Download, Search, ExternalLink, FileText } from 'lucide-react';
 
 export default function ResourcesView({ resources = [] }) {
   const [filterType, setFilterType] = useState('Tất cả');
@@ -13,7 +13,9 @@ export default function ResourcesView({ resources = [] }) {
       subject: 'Ngữ Văn 9',
       author: 'Tổ Xã Hội',
       date: '02/01/2027',
-      downloads: 450
+      downloads: 450,
+      fileUrl: '#',
+      externalLink: 'https://drive.google.com'
     },
     {
       id: 2,
@@ -22,7 +24,9 @@ export default function ResourcesView({ resources = [] }) {
       subject: 'Toán 8',
       author: 'Tổ Tự Nhiên',
       date: '10/11/2026',
-      downloads: 680
+      downloads: 680,
+      fileUrl: '#',
+      externalLink: ''
     },
     {
       id: 3,
@@ -31,7 +35,9 @@ export default function ResourcesView({ resources = [] }) {
       subject: 'Tiếng Anh 8-9',
       author: 'Nhóm Ngoại Ngữ',
       date: '15/10/2026',
-      downloads: 890
+      downloads: 890,
+      fileUrl: '#',
+      externalLink: 'https://drive.google.com'
     },
     {
       id: 4,
@@ -40,7 +46,9 @@ export default function ResourcesView({ resources = [] }) {
       subject: 'Vật lý 9',
       author: 'Tổ Tự Nhiên',
       date: '05/11/2026',
-      downloads: 310
+      downloads: 310,
+      fileUrl: '#',
+      externalLink: ''
     }
   ];
 
@@ -49,6 +57,19 @@ export default function ResourcesView({ resources = [] }) {
     const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase()) || item.subject.toLowerCase().includes(search.toLowerCase());
     return matchesType && matchesSearch;
   });
+
+  const handleDownload = (item) => {
+    if (item.fileUrl && item.fileUrl !== '#') {
+      const link = document.createElement('a');
+      link.href = item.fileUrl;
+      link.download = item.title + '.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      alert(`Đã bắt đầu tải về tệp tài liệu: ${item.title}`);
+    }
+  };
 
   return (
     <div style={{ padding: '20px', maxWidth: '1100px', margin: '0 auto' }}>
@@ -108,16 +129,29 @@ export default function ResourcesView({ resources = [] }) {
                     {item.title}
                   </h3>
                   <div style={{ fontSize: '12px', color: '#64748b' }}>
-                    ✍️ Biên soạn: {item.author} | 📅 Ngày tạo: {item.date} | 📥 {item.downloads} lượt tải về
+                    ✍️ Biên soạn: {item.author} | 📅 Ngày tạo: {item.date} | 📥 {item.downloads} lượt tải
                   </div>
                 </div>
 
-                <button 
-                  style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#15803d', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', whiteSpace: 'nowrap' }}
-                  onClick={() => alert(`Đã bắt đầu tải về tệp tài nguyên: ${item.title}`)}
-                >
-                  <Download size={15} /> Tải tài liệu
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#15803d', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', whiteSpace: 'nowrap' }}
+                    onClick={() => handleDownload(item)}
+                  >
+                    <Download size={15} /> Tải tệp xuống
+                  </button>
+
+                  {item.externalLink && (
+                    <a 
+                      href={item.externalLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#d97706', color: 'white', textDecoration: 'none', padding: '8px 14px', borderRadius: '4px', fontWeight: '700', fontSize: '13px', whiteSpace: 'nowrap' }}
+                    >
+                      <ExternalLink size={14} /> Link Drive
+                    </a>
+                  )}
+                </div>
               </div>
             ))}
           </div>

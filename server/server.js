@@ -13,6 +13,7 @@ import newsRoutes from './routes/news.js';
 import documentsRoutes from './routes/documents.js';
 import mediaRoutes from './routes/media.js';
 import announcementsRoutes from './routes/announcements.js';
+import uploadRoutes from './routes/upload.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,6 +27,10 @@ app.use(cors());
 // Body Parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve Uploaded Files Static Directory
+const uploadsPath = path.join(__dirname, 'uploads');
+app.use('/uploads', express.static(uploadsPath));
 
 // Tầng 2: Middleware & API Gateway
 app.use('/api/', apiGatewayLimiter);
@@ -44,6 +49,7 @@ app.use('/api/news', newsRoutes);
 app.use('/api/documents', documentsRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/announcements', announcementsRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Healthcheck Route
 app.get('/api/health', (req, res) => {
@@ -59,7 +65,7 @@ app.get('/api/health', (req, res) => {
 const distPath = path.join(__dirname, '../dist');
 app.use(express.static(distPath));
 app.get('*', (req, res) => {
-  if (!req.originalUrl.startsWith('/api')) {
+  if (!req.originalUrl.startsWith('/api') && !req.originalUrl.startsWith('/uploads')) {
     res.sendFile(path.join(distPath, 'index.html'), (err) => {
       if (err) {
         res.status(200).send('Cổng thông tin THCS Đồng Tân API đang hoạt động tại cổng ' + PORT);
