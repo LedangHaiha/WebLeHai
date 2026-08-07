@@ -1,41 +1,49 @@
 import React from 'react';
 
-export default function Footer() {
+export default function Footer({ siteConfig }) {
+  const config = siteConfig || {
+    schoolName: 'TRƯỜNG THCS ĐỒNG TÂN',
+    governingBody: 'UBND Xã Hữu Lũng - Tỉnh Lạng Sơn',
+    address: 'Xã Hữu Lũng - Tỉnh Lạng Sơn',
+    phone: '(0205) 3885.6789',
+    email: 'thcsdongtan.huulung@langson.edu.vn'
+  };
+
   return (
     <footer className="site-footer">
-      <div className="footer-grid">
-        <div className="footer-column">
-          <h4>TRƯỜNG THỰC HIỆN CHUYỂN ĐỔI SỐ THCS ĐỒNG TÂN</h4>
-          <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#cbd5e1' }}>
-            <strong>Cơ quan chủ quản:</strong> Xã Hữu Lũng - Tỉnh Lạng Sơn.<br />
-            <strong>Địa chỉ:</strong> Xã Hữu Lũng, Tỉnh Lạng Sơn.<br />
-            <strong>Điện thoại BGH:</strong> (0205) 3885.6789 | <strong>Email:</strong> thcsdongtan.huulung@langson.edu.vn<br />
-            <strong>Chịu trách nhiệm nội dung:</strong> Ban Giám Hiệu Trường THCS Đồng Tân.
-          </p>
+      <div className="footer-content">
+        <div className="footer-col">
+          <h3>CƠ QUAN CHỦ QUẢN</h3>
+          <p><strong>{config.governingBody}</strong></p>
+          <p><strong>{config.schoolName}</strong></p>
+          <p>📍 Địa chỉ: {config.address}</p>
+          <p>📞 Điện thoại: {config.phone}</p>
+          <p>✉️ Email: {config.email}</p>
         </div>
 
-        <div className="footer-column">
-          <h4>LIÊN KẾT NHANH</h4>
-          <ul className="footer-links">
+        <div className="footer-col">
+          <h3>LIÊN KẾT NHANH</h3>
+          <ul>
             <li><a href="#intro">Giới thiệu nhà trường</a></li>
             <li><a href="#news">Tin tức - Sự kiện nổi bật</a></li>
-            <li><a href="#docs">Hệ thống văn bản chỉ đạo</a></li>
-            <li><a href="#media">Thư viện ảnh & Video</a></li>
-            <li><a href="#contact">Sơ đồ chỉ đường & Liên hệ</a></li>
+            <li><a href="#docs">Văn bản chỉ đạo & Quy chế</a></li>
+            <li><a href="#resources">Kho Tài nguyên & Đề thi</a></li>
+            <li><a href="#schedule">Lịch công tác tuần</a></li>
           </ul>
         </div>
 
-        <div className="footer-column">
-          <h4>BẢO MẬT & VẬN HÀNH</h4>
-          <p style={{ fontSize: '12.5px', color: '#cbd5e1', lineHeight: '1.5' }}>
-            Hệ thống Cổng thông tin điện tử vận hành theo Kiến trúc 4 tầng bảo mật (API Gateway, Auth Guard JWT, SQLite Main DB).<br />
-            © 2026 Bản quyền thuộc về Trường THCS Đồng Tân.
-          </p>
+        <div className="footer-col">
+          <h3>THỐNG KÊ TRUY CẬP</h3>
+          <div className="stats-box">
+            <div>🟢 Đang trực tuyến: <strong>48</strong></div>
+            <div>📊 Lượt truy cập hôm nay: <strong>1,250</strong></div>
+            <div>🌐 Tổng số lượt truy cập: <strong>850,420</strong></div>
+          </div>
         </div>
       </div>
 
       <div className="footer-bottom">
-        Cổng thông tin điện tử Trường THCS Đồng Tân | Xã Hữu Lũng - Tỉnh Lạng Sơn (2026)
+        Bản quyền © 2026 {config.schoolName} - Xã Hữu Lũng, Tỉnh Lạng Sơn. Tất cả quyền được bảo lưu.
       </div>
     </footer>
   );

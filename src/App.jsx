@@ -18,6 +18,18 @@ import ScheduleView from './components/ScheduleView';
 import ContactView from './components/ContactView';
 import Footer from './components/Footer';
 
+// Initial Fallback Site Config
+const INITIAL_SITE_CONFIG = {
+  schoolName: 'TRƯỜNG THCS ĐỒNG TÂN',
+  governingBody: 'ỦY BAN NHÂN DÂN XÃ HỮU LŨNG - TỈNH LẠNG SƠN',
+  slogan: 'HỘI TỤ - KẾT TINH - TỎA SÁNG',
+  address: 'Xã Hữu Lũng - Tỉnh Lạng Sơn',
+  phone: '(0205) 3885.6789',
+  email: 'thcsdongtan.huulung@langson.edu.vn',
+  logoUrl: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=300&q=80',
+  bannerBg: ''
+};
+
 // Initial Fallback Data
 const INITIAL_CATEGORIES = [
   { id: 1, name: 'Tin tức - Sự kiện', slug: 'tin-tuc-su-kien', articleCount: 3 },
@@ -143,6 +155,12 @@ const INITIAL_ANNOUNCEMENTS = [
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Dynamic Site Config
+  const [siteConfig, setSiteConfig] = useState(() => {
+    const saved = localStorage.getItem('siteConfig');
+    return saved ? JSON.parse(saved) : INITIAL_SITE_CONFIG;
+  });
   
   // Dynamic State List
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
@@ -170,6 +188,30 @@ export default function App() {
   // Admin Auth State
   const [token, setToken] = useState(localStorage.getItem('adminToken') || '');
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('adminUser') || 'null'));
+
+  const handleSaveSiteConfig = (newConfig) => {
+    setSiteConfig(newConfig);
+    localStorage.setItem('siteConfig', JSON.stringify(newConfig));
+  };
+
+  const handleUpdateNews = (updatedArticle) => {
+    setNewsList(prev => prev.map(a => a.id === updatedArticle.id ? updatedArticle : a));
+    if (featuredNews?.id === updatedArticle.id) {
+      setFeaturedNews(updatedArticle);
+    }
+  };
+
+  const handleDeleteNews = (articleId) => {
+    setNewsList(prev => prev.filter(a => a.id !== articleId));
+  };
+
+  const handleUpdateDocument = (updatedDoc) => {
+    setDocuments(prev => prev.map(d => d.id === updatedDoc.id ? updatedDoc : d));
+  };
+
+  const handleDeleteDocument = (docId) => {
+    setDocuments(prev => prev.filter(d => d.id !== docId));
+  };
 
   const fetchData = async () => {
     try {
@@ -332,7 +374,7 @@ export default function App() {
 
   return (
     <div className="site-container">
-      <HeaderBanner />
+      <HeaderBanner siteConfig={siteConfig} />
 
       <Navbar 
         activeTab={activeTab} 
@@ -356,11 +398,20 @@ export default function App() {
             onLogin={handleLoginSuccess} 
             onLogout={handleLogout} 
             categories={categories}
+            siteConfig={siteConfig}
+            onSaveSiteConfig={handleSaveSiteConfig}
+            newsList={newsList}
+            documents={documents}
+            resources={resources}
+            onUpdateNews={handleUpdateNews}
+            onDeleteNews={handleDeleteNews}
+            onUpdateDocument={handleUpdateDocument}
+            onDeleteDocument={handleDeleteDocument}
             onRefreshData={fetchData}
           />
         </div>
       ) : activeTab === 'intro' ? (
-        <IntroView />
+        <IntroView siteConfig={siteConfig} />
       ) : activeTab === 'albums' ? (
         <AlbumsView albums={albums} />
       ) : activeTab === 'videos' ? (
@@ -370,7 +421,7 @@ export default function App() {
       ) : activeTab === 'schedule' ? (
         <ScheduleView schedule={schedules} />
       ) : activeTab === 'contact' ? (
-        <ContactView />
+        <ContactView siteConfig={siteConfig} />
       ) : activeTab === 'documents' ? (
         <div style={{ padding: '20px' }}>
           <div className="widget-box">
@@ -477,7 +528,7 @@ export default function App() {
         />
       )}
 
-      <Footer />
+      <Footer siteConfig={siteConfig} />
     </div>
   );
 }
