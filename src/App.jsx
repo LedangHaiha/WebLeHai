@@ -161,6 +161,56 @@ const INITIAL_VIDEOS = [
   }
 ];
 
+const INITIAL_ALBUMS = [
+  {
+    id: 1,
+    title: 'Album: Lễ Khai giảng năm học 2026 - 2027 THCS Đồng Tân',
+    date: '05/09/2026',
+    photosCount: 18,
+    cover: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80',
+    description: 'Hình ảnh rực rỡ cờ hoa trong ngày hội Khai trường chào đón các em học sinh khối 6 mới trúng tuyển.'
+  },
+  {
+    id: 2,
+    title: 'Album: Ngày hội Sáng tạo STEM & Triển lãm Khoa học Kỹ thuật',
+    date: '20/10/2026',
+    photosCount: 24,
+    cover: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&q=80',
+    description: 'Học sinh hào hứng trải nghiệm mô hình tên lửa nước, rô bốt và các sản phẩm khoa học tự làm.'
+  }
+];
+
+const INITIAL_RESOURCES = [
+  {
+    id: 1,
+    title: 'Đề thi Học kỳ 1 môn Ngữ Văn lớp 9 năm học 2026 - 2027 (Có đáp án)',
+    type: 'Đề thi & Đáp án',
+    subject: 'Ngữ Văn 9',
+    author: 'Tổ Xã Hội',
+    date: '02/01/2027',
+    downloads: 450,
+    fileUrl: '#',
+    externalLink: 'https://drive.google.com'
+  },
+  {
+    id: 2,
+    title: 'Giáo án điện tử môn Toán 8: Bài 5 - Phương trình bậc nhất một ẩn',
+    type: 'Giáo án điện tử',
+    subject: 'Toán 8',
+    author: 'Tổ Tự Nhiên',
+    date: '10/11/2026',
+    downloads: 680,
+    fileUrl: '#',
+    externalLink: ''
+  }
+];
+
+const INITIAL_SCHEDULES = [
+  { day: 'Thứ Hai (08/02)', time: '07:30 - 08:15', content: 'Lễ Chào cờ đầu tuần & Tuyên dương thi đua tuần qua', leader: 'Toàn trường' },
+  { day: 'Thứ Ba (09/02)', time: '14:00 - 16:30', content: 'Họp Chuyên môn Tổ Tự Nhiên & Kiểm tra giáo án tuần 22', leader: 'Tổ trưởng Tự nhiên' },
+  { day: 'Thứ Tư (10/02)', time: '08:00 - 11:30', content: 'Tập huấn Chuyển đổi số & Ứng dụng AI trong giảng dạy năm 2026', leader: 'BGH & Phòng GD&ĐT' }
+];
+
 const INITIAL_ANNOUNCEMENTS = [
   { id: 1, content: 'Chào mừng quý phụ huynh và học sinh đến với trang Web chính thức của trường THCS Đồng Tân, Xã Hữu Lũng, Lạng Sơn!' },
   { id: 2, content: 'Thông báo: Lịch tập trung học sinh toàn trường chuẩn bị cho Lễ Khai giảng năm học 2026 - 2027.' },
@@ -171,12 +221,15 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [selectedCategory, setSelectedCategory] = useState(null);
   
-  // Data States
+  // Dynamic State List
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
   const [featuredNews, setFeaturedNews] = useState(INITIAL_FEATURED_NEWS);
   const [newsList, setNewsList] = useState(INITIAL_NEWS_LIST);
   const [documents, setDocuments] = useState(INITIAL_DOCUMENTS);
   const [videos, setVideos] = useState(INITIAL_VIDEOS);
+  const [albums, setAlbums] = useState(INITIAL_ALBUMS);
+  const [resources, setResources] = useState(INITIAL_RESOURCES);
+  const [schedules, setSchedules] = useState(INITIAL_SCHEDULES);
   const [announcements, setAnnouncements] = useState(INITIAL_ANNOUNCEMENTS);
 
   // Modal States
@@ -242,6 +295,30 @@ export default function App() {
   useEffect(() => {
     fetchData();
   }, [selectedCategory]);
+
+  // Dynamic Add New Item Handler: Immediately updates state & opens corresponding tab!
+  const handleAddNewItem = (type, newItem) => {
+    if (type === 'docs') {
+      setDocuments(prev => [newItem, ...prev]);
+      setActiveTab('documents');
+    } else if (type === 'resources') {
+      setResources(prev => [newItem, ...prev]);
+      setActiveTab('resources');
+    } else if (type === 'news') {
+      setNewsList(prev => [newItem, ...prev]);
+      setFeaturedNews(newItem);
+      setActiveTab('home');
+    } else if (type === 'albums') {
+      setAlbums(prev => [newItem, ...prev]);
+      setActiveTab('albums');
+    } else if (type === 'videos') {
+      setVideos(prev => [newItem, ...prev]);
+      setActiveTab('videos');
+    } else if (type === 'schedule') {
+      setSchedules(prev => [newItem, ...prev]);
+      setActiveTab('schedule');
+    }
+  };
 
   const handleOpenUpload = (tab = 'docs') => {
     setUploadDefaultTab(tab);
@@ -361,13 +438,13 @@ export default function App() {
       ) : activeTab === 'intro' ? (
         <IntroView />
       ) : activeTab === 'albums' ? (
-        <AlbumsView />
+        <AlbumsView albums={albums} />
       ) : activeTab === 'videos' ? (
         <VideosView videos={videos} />
       ) : activeTab === 'resources' ? (
-        <ResourcesView resources={[]} onOpenUpload={handleOpenUpload} />
+        <ResourcesView resources={resources} onOpenUpload={handleOpenUpload} />
       ) : activeTab === 'schedule' ? (
-        <ScheduleView />
+        <ScheduleView schedule={schedules} />
       ) : activeTab === 'contact' ? (
         <ContactView />
       ) : activeTab === 'documents' ? (
@@ -465,7 +542,7 @@ export default function App() {
           defaultTab={uploadDefaultTab} 
           categories={categories} 
           onClose={() => setShowUploadModal(false)}
-          onSuccess={fetchData}
+          onAddNewItem={handleAddNewItem}
         />
       )}
 
