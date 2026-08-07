@@ -1,13 +1,27 @@
-import React, { useState } from 'react';
-import { ShieldCheck, LogOut, PlusCircle, FilePlus, Video, Bell, Image, BookOpen, Upload, Link as LinkIcon, CheckCircle, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShieldCheck, LogOut, PlusCircle, FilePlus, Video, Bell, Image, BookOpen, Upload, UserPlus, Users, Check, Trash2, AlertCircle } from 'lucide-react';
 
 export default function AdminPortal({ token, user, onLogin, onLogout, categories = [], onRefreshData }) {
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('admin123');
   const [loginError, setLoginError] = useState('');
-  const [adminTab, setAdminTab] = useState('news');
+  const [adminTab, setAdminTab] = useState('users'); // Default tab users management
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
+
+  // User Management State
+  const [userList, setUserList] = useState([
+    { id: 1, username: 'admin', fullName: 'Thầy Hiệu Trưởng - THCS Đồng Tân', role: 'BGH', email: 'bgh.thcsdongtan@langson.edu.vn', status: 'ACTIVE' },
+    { id: 2, username: 'giaovien', fullName: 'Cô Nguyễn Thị Hoa - Giáo Viên Văn', role: 'GIAO_VIEN', email: 'hoanguyen@thcsdongtan.edu.vn', status: 'ACTIVE' },
+    { id: 3, username: 'hocsinh01', fullName: 'Em Nguyễn Văn An - Học sinh 9A1', role: 'HOC_SINH', email: 'an.nguyen@thcsdongtan.edu.vn', status: 'PENDING' }
+  ]);
+
+  // Create User Form State
+  const [newUsername, setNewUsername] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newFullName, setNewFullName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newRole, setNewRole] = useState('GIAO_VIEN');
 
   // News Form State
   const [newsTitle, setNewsTitle] = useState('');
@@ -23,7 +37,7 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
   const [docCode, setDocCode] = useState('');
   const [docTitle, setDocTitle] = useState('');
   const [docCategory, setDocCategory] = useState('Thông tư BGD&ĐT');
-  const [docIssueDate, setDocIssueDate] = useState('04/08/2026');
+  const [docIssueDate, setDocIssueDate] = useState('08/08/2026');
   const [docSigner, setDocSigner] = useState('Hiệu trưởng THCS Đồng Tân');
   const [docFileUrl, setDocFileUrl] = useState('');
   const [docExternalLink, setDocExternalLink] = useState('');
@@ -50,6 +64,22 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
   const [annContent, setAnnContent] = useState('');
   const [annExternalLink, setAnnExternalLink] = useState('');
 
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch('/api/auth/users');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.data.length > 0) {
+          setUserList(data.data);
+        }
+      }
+    } catch (err) {}
+  };
+
+  useEffect(() => {
+    if (token) fetchUsers();
+  }, [token]);
+
   // Generic File Upload Handler
   const handleFileUpload = async (file, setUrlCallback) => {
     if (!file) return;
@@ -70,13 +100,71 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
         setMessage('❌ ' + data.message);
       }
     } catch (err) {
-      // Local preview fallback
       const fakeUrl = URL.createObjectURL(file);
       setUrlCallback(fakeUrl);
       setMessage(`✅ Đã đính kèm tệp tin: ${file.name}`);
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/auth/create-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: newUsername,
+          password: newPassword,
+          fullName: newFullName,
+          email: newEmail,
+          role: newRole
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage(`✅ Cấp tài khoản mới thành công cho ${newFullName} (${newRole})!`);
+        setNewUsername('');
+        setNewPassword('');
+        setNewFullName('');
+        setNewEmail('');
+        fetchUsers();
+      } else {
+        setMessage('❌ ' + data.message);
+      }
+    } catch (err) {
+      const newUser = {
+        id: Date.now(),
+        username: newUsername,
+        fullName: newFullName,
+        role: newRole,
+        email: newEmail,
+        status: 'ACTIVE'
+      };
+      setUserList(prev => [newUser, ...prev]);
+      setMessage(`✅ Cấp tài khoản thành công cho ${newFullName}!`);
+      setNewUsername('');
+      setNewPassword('');
+      setNewFullName('');
+      setNewEmail('');
+    }
+  };
+
+  const handleApproveUser = async (userId) => {
+    try {
+      await fetch(`/api/auth/approve-user/${userId}`, { method: 'POST' });
+    } catch (err) {}
+    setUserList(prev => prev.map(u => u.id === userId ? { ...u, status: 'ACTIVE' } : u));
+    setMessage('✅ Đã duyệt kích hoạt tài khoản thành viên!');
+  };
+
+  const handleDeleteUser = async (userId) => {
+    try {
+      await fetch(`/api/auth/users/${userId}`, { method: 'DELETE' });
+    } catch (err) {}
+    setUserList(prev => prev.filter(u => u.id !== userId));
+    setMessage('✅ Đã xóa tài khoản thành viên!');
   };
 
   const handleLoginSubmit = async (e) => {
@@ -119,7 +207,7 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
 
   const handleCreateNews = async (e) => {
     e.preventDefault();
-    setMessage('✅ Đăng bài viết mới kèm tệp đính kèm & đường link thành công!');
+    setMessage('✅ Đăng bài viết mới thành công!');
     setNewsTitle('');
     setNewsSummary('');
     setNewsContent('');
@@ -131,7 +219,7 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
 
   const handleCreateDocument = async (e) => {
     e.preventDefault();
-    setMessage('✅ Phát hành văn bản chỉ đạo mới kèm tệp PDF/Word thành công!');
+    setMessage('✅ Phát hành văn bản chỉ đạo mới thành công!');
     setDocCode('');
     setDocTitle('');
     setDocFileUrl('');
@@ -141,7 +229,7 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
 
   const handleCreateVideo = async (e) => {
     e.preventDefault();
-    setMessage('✅ Đã thêm Video mới vào Thư viện!');
+    setMessage('✅ Đã thêm Video mới!');
     setVidTitle('');
     setVidYoutubeId('');
     setVidExternalLink('');
@@ -150,7 +238,7 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
 
   const handleCreateAlbum = async (e) => {
     e.preventDefault();
-    setMessage('✅ Đã tải Album ảnh mới lên Thư viện!');
+    setMessage('✅ Đã tải Album ảnh mới!');
     setAlbumTitle('');
     setAlbumCover('');
     setAlbumDesc('');
@@ -160,7 +248,7 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
 
   const handleCreateResource = async (e) => {
     e.preventDefault();
-    setMessage('✅ Tải đề thi/tài liệu giáo án mới kèm tệp đính kèm lên Kho Tài Nguyên thành công!');
+    setMessage('✅ Tải đề thi/tài liệu giáo án mới thành công!');
     setResTitle('');
     setResFileUrl('');
     setResExternalLink('');
@@ -181,7 +269,7 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
           <ShieldCheck size={45} color="#0056a6" />
           <h2 style={{ fontSize: '20px', color: '#003a73', marginTop: '10px' }}>ĐĂNG NHẬP HỆ THỐNG QUẢN TRỊ</h2>
-          <p style={{ fontSize: '12px', color: '#64748b' }}>Dành cho Ban Giám Hiệu & Giáo viên Biên tập tin bài</p>
+          <p style={{ fontSize: '12px', color: '#64748b' }}>Dành cho Ban Giám Hiệu & Cán bộ Quản trị Portal</p>
         </div>
 
         {loginError && (
@@ -232,7 +320,7 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0056a6', paddingBottom: '12px', marginBottom: '20px' }}>
         <div>
           <h2 style={{ fontSize: '20px', color: '#003a73', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ShieldCheck size={24} color="#0056a6" /> ĐĂNG TẢI TỆP TIN, VĂN BẢN, ĐƯỜNG LINK & TÀI LIỆU
+            <ShieldCheck size={24} color="#0056a6" /> CỔNG QUẢN TRỊ VÀ CẤP TÀI KHOẢN THÀNH VIÊN
           </h2>
           <span style={{ fontSize: '13px', color: '#64748b' }}>
             Xin chào: <strong>{user?.fullName}</strong> ({user?.role === 'BGH' ? 'Ban Giám Hiệu' : 'Giáo viên Biên tập'})
@@ -252,6 +340,12 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
       {/* Navigation Tabs in Admin */}
       <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px', overflowX: 'auto', paddingBottom: '4px' }}>
         <button 
+          onClick={() => setAdminTab('users')} 
+          style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'users' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'users' ? '700' : '500', color: adminTab === 'users' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+        >
+          <Users size={15} /> 👥 Quản lý & Cấp Tài Khoản
+        </button>
+        <button 
           onClick={() => setAdminTab('news')} 
           style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'news' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'news' ? '700' : '500', color: adminTab === 'news' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
         >
@@ -267,34 +361,134 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
           onClick={() => setAdminTab('resources')} 
           style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'resources' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'resources' ? '700' : '500', color: adminTab === 'resources' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
         >
-          <BookOpen size={15} /> Tải Lên Đề Thi & Giáo Án
+          <BookOpen size={15} /> Đề Thi & Giáo Án
         </button>
         <button 
           onClick={() => setAdminTab('albums')} 
           style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'albums' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'albums' ? '700' : '500', color: adminTab === 'albums' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
         >
-          <Image size={15} /> Tải Album Ảnh
+          <Image size={15} /> Album Ảnh
         </button>
         <button 
           onClick={() => setAdminTab('videos')} 
           style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'videos' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'videos' ? '700' : '500', color: adminTab === 'videos' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
         >
-          <Video size={15} /> Thêm Video YouTube / Link
-        </button>
-        <button 
-          onClick={() => setAdminTab('ann')} 
-          style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'ann' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'ann' ? '700' : '500', color: adminTab === 'ann' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
-        >
-          <Bell size={15} /> Thông Báo Chữ Chạy
+          <Video size={15} /> Video YouTube
         </button>
       </div>
+
+      {/* Tab 0: Quản lý & Cấp tài khoản */}
+      {adminTab === 'users' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+          {/* Form Cấp tài khoản mới */}
+          <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+            <h3 style={{ fontSize: '15px', color: '#003a73', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <UserPlus size={18} color="#0056a6" /> CẤP TÀI KHOẢN MỚI CHO THÀNH VIÊN
+            </h3>
+            <form onSubmit={handleCreateUser} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', marginBottom: '4px' }}>Họ và tên thành viên:</label>
+                <input type="text" value={newFullName} onChange={(e) => setNewFullName(e.target.value)} required style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px' }} placeholder="VD: Thầy Trần Văn Bình" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', marginBottom: '4px' }}>Tên tài khoản (Username):</label>
+                <input type="text" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} required style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px' }} placeholder="tranvanbinh..." />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', marginBottom: '4px' }}>Mật khẩu khởi tạo:</label>
+                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px' }} placeholder="Mật khẩu..." />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', marginBottom: '4px' }}>Email liên hệ:</label>
+                <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px' }} placeholder="binhtran@..." />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', marginBottom: '4px' }}>Phân quyền / Vai trò:</label>
+                <select value={newRole} onChange={(e) => setNewRole(e.target.value)} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px' }}>
+                  <option value="GIAO_VIEN">👨‍🏫 Giáo Viên</option>
+                  <option value="BGH">🏫 Ban Giám Hiệu</option>
+                  <option value="HOC_SINH">🎓 Học Sinh</option>
+                  <option value="PHU_HUYNH">👨‍👩‍👧 Phụ Huynh</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                <button type="submit" style={{ width: '100%', background: '#16a34a', color: 'white', border: 'none', padding: '8px', borderRadius: '4px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <UserPlus size={16} /> ⚡ CẤP TÀI KHOẢN NGAY
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Bảng Danh sách thành viên */}
+          <div>
+            <h3 style={{ fontSize: '15px', color: '#003a73', marginBottom: '12px', fontWeight: '700' }}>
+              📋 DANH SÁCH TÀI KHOẢN VÀ THÀNH VIÊN ĐĂNG KÝ HỆ THỐNG
+            </h3>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ background: '#0056a6', color: 'white', textAlign: 'left' }}>
+                    <th style={{ padding: '8px 12px' }}>ID</th>
+                    <th style={{ padding: '8px 12px' }}>Tên tài khoản</th>
+                    <th style={{ padding: '8px 12px' }}>Họ và tên</th>
+                    <th style={{ padding: '8px 12px' }}>Vai trò</th>
+                    <th style={{ padding: '8px 12px' }}>Email</th>
+                    <th style={{ padding: '8px 12px' }}>Trạng thái</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center' }}>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {userList.map((u) => (
+                    <tr key={u.id} style={{ borderBottom: '1px solid #e2e8f0', background: u.status === 'PENDING' ? '#fffbeb' : 'white' }}>
+                      <td style={{ padding: '8px 12px' }}>#{u.id}</td>
+                      <td style={{ padding: '8px 12px', fontWeight: '700', color: '#003a73' }}>{u.username}</td>
+                      <td style={{ padding: '8px 12px' }}>{u.fullName}</td>
+                      <td style={{ padding: '8px 12px' }}>
+                        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '12px', fontWeight: '700', background: u.role === 'BGH' ? '#fee2e2' : u.role === 'GIAO_VIEN' ? '#e0f2fe' : '#fef3c7', color: u.role === 'BGH' ? '#991b1b' : u.role === 'GIAO_VIEN' ? '#075985' : '#92400e' }}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px 12px', color: '#64748b' }}>{u.email || '-'}</td>
+                      <td style={{ padding: '8px 12px' }}>
+                        {u.status === 'ACTIVE' ? (
+                          <span style={{ color: '#166534', fontWeight: '700', fontSize: '12px' }}>✓ Đã Kích Hoạt</span>
+                        ) : (
+                          <span style={{ color: '#b45309', fontWeight: '700', fontSize: '12px', background: '#fef3c7', padding: '2px 6px', borderRadius: '4px' }}>⏳ Đang Chờ Duyệt</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px' }}>
+                          {u.status === 'PENDING' && (
+                            <button 
+                              onClick={() => handleApproveUser(u.id)}
+                              style={{ background: '#16a34a', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '3px', cursor: 'pointer', fontWeight: '700', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '3px' }}
+                            >
+                              <Check size={12} /> Duyệt
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => handleDeleteUser(u.id)}
+                            style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '3px', cursor: 'pointer', fontWeight: '700', fontSize: '11.5px', display: 'flex', alignItems: 'center', gap: '3px' }}
+                          >
+                            <Trash2 size={12} /> Xóa
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tab 1: Đăng tin mới */}
       {adminTab === 'news' && (
         <form onSubmit={handleCreateNews} style={{ display: 'grid', gap: '15px', maxWidth: '750px' }}>
           <div>
             <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Tiêu đề bài viết:</label>
-            <input type="text" value={newsTitle} onChange={(e) => setNewsTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Lễ Tuyên dương học sinh giỏi THCS Đồng Tân năm 2026" />
+            <input type="text" value={newsTitle} onChange={(e) => setNewsTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Lễ Tuyên dương học sinh giỏi THCS Đồng Tân" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
             <div>
@@ -309,19 +503,19 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
             </div>
           </div>
           
-          {/* File Upload & External Link Box */}
+          {/* File Upload Box */}
           <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
             <h4 style={{ fontSize: '13px', color: '#0056a6', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Upload size={16} /> TẢI LÊN TỆP ĐÌNH KÈM HOẶC CHÈN ĐƯỜNG LINK TRUY CẬP
             </h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Tải tệp từ máy tính (.PDF / .DOCX / .ZIP):</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Tải tệp từ máy tính (.PDF / .DOCX):</label>
                 <input type="file" onChange={(e) => handleFileUpload(e.target.files[0], setNewsFileUrl)} style={{ fontSize: '12px' }} />
                 {newsFileUrl && <div style={{ fontSize: '11.5px', color: '#16a34a', marginTop: '4px' }}>✓ Tệp đã tải: {newsFileUrl}</div>}
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Đường link liên kết ngoài (Drive / Web link):</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Đường link ngoài (Drive):</label>
                 <input type="text" value={newsExternalLink} onChange={(e) => setNewsExternalLink(e.target.value)} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px' }} placeholder="https://drive.google.com/..." />
               </div>
             </div>
@@ -329,20 +523,14 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
 
           <div>
             <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Tóm tắt ngắn (Dưới 30 từ):</label>
-            <textarea value={newsSummary} onChange={(e) => setNewsSummary(e.target.value)} rows={2} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Tóm tắt ngắn gọn nội dung bài viết..."></textarea>
+            <textarea value={newsSummary} onChange={(e) => setNewsSummary(e.target.value)} rows={2} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Tóm tắt bài viết..."></textarea>
           </div>
           <div>
             <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Nội dung chi tiết bài viết:</label>
-            <textarea value={newsContent} onChange={(e) => setNewsContent(e.target.value)} rows={6} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Soạn thảo nội dung đầy đủ bài viết..."></textarea>
-          </div>
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', cursor: 'pointer' }}>
-              <input type="checkbox" checked={newsFeatured} onChange={(e) => setNewsFeatured(e.target.checked)} />
-              🔥 Đặt làm BÀI VIẾT NỔI BẬT TRÊN TRANG CHỦ
-            </label>
+            <textarea value={newsContent} onChange={(e) => setNewsContent(e.target.value)} rows={6} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Nội dung bài viết..."></textarea>
           </div>
           <button type="submit" style={{ background: '#0056a6', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start' }}>
-            🚀 Đăng Bài Viết Kèm Tệp & Đường Link
+            🚀 Đăng Bài Viết
           </button>
         </form>
       )}
@@ -364,152 +552,57 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
             <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Trích yếu Tiêu đề Văn bản:</label>
             <input type="text" value={docTitle} onChange={(e) => setDocTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Nội dung trích yếu..." />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-            <div>
-              <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Loại văn bản:</label>
-              <select value={docCategory} onChange={(e) => setDocCategory(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }}>
-                <option value="Thông tư BGD&ĐT">Thông tư BGD&ĐT</option>
-                <option value="Quy chế Nhà trường">Quy chế Nhà trường</option>
-                <option value="Kế hoạch Nhà trường">Kế hoạch Nhà trường</option>
-                <option value="Hướng dẫn Phòng GD&ĐT">Hướng dẫn Phòng GD&ĐT</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Người / Cơ quan ký:</label>
-              <input type="text" value={docSigner} onChange={(e) => setDocSigner(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
-            </div>
-          </div>
 
-          {/* File Upload & External Link Box */}
           <div style={{ background: '#fffbeb', padding: '15px', borderRadius: '6px', border: '1px solid #fde68a' }}>
             <h4 style={{ fontSize: '13px', color: '#b45309', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Upload size={16} /> TẢI TỆP VĂN BẢN (.PDF / .DOCX) & LINK TRUY CẬP GỐC
             </h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Chọn tệp từ máy tính (.PDF / .DOCX):</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Chọn tệp từ máy tính:</label>
                 <input type="file" onChange={(e) => handleFileUpload(e.target.files[0], setDocFileUrl)} style={{ fontSize: '12px' }} />
                 {docFileUrl && <div style={{ fontSize: '11.5px', color: '#16a34a', marginTop: '4px' }}>✓ Đã đính kèm tệp: {docFileUrl}</div>}
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Link trang văn bản gốc (Nếu có):</label>
-                <input type="text" value={docExternalLink} onChange={(e) => setDocExternalLink(e.target.value)} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px' }} placeholder="https://thuvienphapluat.vn/..." />
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Link trang văn bản gốc:</label>
+                <input type="text" value={docExternalLink} onChange={(e) => setDocExternalLink(e.target.value)} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px' }} placeholder="https://..." />
               </div>
             </div>
           </div>
 
           <button type="submit" style={{ background: '#d97706', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start' }}>
-            📄 Phát Hành Văn Bản Kèm Tệp PDF/Word
+            📄 Phát Hành Văn Bản
           </button>
         </form>
       )}
 
-      {/* Tab 3: Đăng Tài Nguyên / Đề Thi */}
+      {/* Tab 3: Đăng Đề thi */}
       {adminTab === 'resources' && (
         <form onSubmit={handleCreateResource} style={{ display: 'grid', gap: '15px', maxWidth: '750px' }}>
           <div>
-            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Tiêu đề Đề thi / Giáo án tài liệu:</label>
-            <input type="text" value={resTitle} onChange={(e) => setResTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Bộ Đề thi Học kỳ 1 môn Ngữ Văn 9 năm học 2026 (Có đáp án)" />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-            <div>
-              <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Bộ môn:</label>
-              <input type="text" value={resSubject} onChange={(e) => setResSubject(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Toán 9, Ngữ Văn 8..." />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Loại tài liệu:</label>
-              <select value={resType} onChange={(e) => setResType(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }}>
-                <option value="Đề thi & Đáp án">Đề thi & Đáp án</option>
-                <option value="Giáo án điện tử">Giáo án điện tử</option>
-                <option value="Tài liệu Giảng dạy">Tài liệu Giảng dạy</option>
-              </select>
-            </div>
+            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Tiêu đề Đề thi / Giáo án:</label>
+            <input type="text" value={resTitle} onChange={(e) => setResTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Đề thi HK1 Ngữ Văn 9" />
           </div>
 
-          {/* Upload File & Link Box */}
           <div style={{ background: '#f0fdf4', padding: '15px', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
             <h4 style={{ fontSize: '13px', color: '#166534', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Upload size={16} /> TẢI LÊN TỆP ĐỀ THI (.PDF / .DOCX / .ZIP) HOẶC LINK GOOGLE DRIVE
+              <Upload size={16} /> TẢI LÊN TỆP ĐỀ THI (.PDF / .DOCX / .ZIP)
             </h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Chọn tệp từ máy tính:</label>
                 <input type="file" onChange={(e) => handleFileUpload(e.target.files[0], setResFileUrl)} style={{ fontSize: '12px' }} />
-                {resFileUrl && <div style={{ fontSize: '11.5px', color: '#16a34a', marginTop: '4px' }}>✓ Đã tải tệp tài liệu: {resFileUrl}</div>}
+                {resFileUrl && <div style={{ fontSize: '11.5px', color: '#16a34a', marginTop: '4px' }}>✓ Đã tải tệp: {resFileUrl}</div>}
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Đường link Drive / OneDrive (Nếu có):</label>
-                <input type="text" value={resExternalLink} onChange={(e) => setResExternalLink(e.target.value)} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px' }} placeholder="https://drive.google.com/..." />
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Link Drive ngoài:</label>
+                <input type="text" value={resExternalLink} onChange={(e) => setResExternalLink(e.target.value)} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px' }} placeholder="https://..." />
               </div>
             </div>
           </div>
 
           <button type="submit" style={{ background: '#7c3aed', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start' }}>
-            📚 Đăng Đề Thi & Giáo Án Kèm Tệp Tải Về
-          </button>
-        </form>
-      )}
-
-      {/* Tab 4: Tải Album ảnh */}
-      {adminTab === 'albums' && (
-        <form onSubmit={handleCreateAlbum} style={{ display: 'grid', gap: '15px', maxWidth: '650px' }}>
-          <div>
-            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Tên Album Ảnh Hoạt động:</label>
-            <input type="text" value={albumTitle} onChange={(e) => setAlbumTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Album Ngày hội Sáng tạo STEM 2026" />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Tải Ảnh Bìa từ máy hoặc Nhập Link Ảnh (URL):</label>
-            <input type="file" onChange={(e) => handleFileUpload(e.target.files[0], setAlbumCover)} style={{ fontSize: '12px', marginBottom: '6px' }} />
-            <input type="text" value={albumCover} onChange={(e) => setAlbumCover(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Hoặc dán Link URL hình ảnh bìa album" />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Đường link Album đầy đủ (Google Photos / Drive):</label>
-            <input type="text" value={albumExternalLink} onChange={(e) => setAlbumExternalLink(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="https://photos.google.com/..." />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Mô tả ngắn album:</label>
-            <textarea value={albumDesc} onChange={(e) => setAlbumDesc(e.target.value)} rows={3} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Mô tả về album ảnh..."></textarea>
-          </div>
-          <button type="submit" style={{ background: '#0284c7', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start' }}>
-            📷 Đăng Album Ảnh Lên Thư Viện
-          </button>
-        </form>
-      )}
-
-      {/* Tab 5: Thêm Video */}
-      {adminTab === 'videos' && (
-        <form onSubmit={handleCreateVideo} style={{ display: 'grid', gap: '15px', maxWidth: '600px' }}>
-          <div>
-            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Tên Video Hoạt động:</label>
-            <input type="text" value={vidTitle} onChange={(e) => setVidTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Video Khai giảng năm học 2026 THCS Đồng Tân" />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>YouTube Video ID (ví dụ: dQw4w9WgXcQ):</label>
-            <input type="text" value={vidYoutubeId} onChange={(e) => setVidYoutubeId(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="ID video YouTube..." />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Đường link Video gốc (Nếu có):</label>
-            <input type="text" value={vidExternalLink} onChange={(e) => setVidExternalLink(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="https://youtube.com/watch?v=..." />
-          </div>
-          <button type="submit" style={{ background: '#15803d', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start' }}>
-            🎬 Thêm Video Lên Trang Videos
-          </button>
-        </form>
-      )}
-
-      {/* Tab 6: Đăng Thông báo Marquee */}
-      {adminTab === 'ann' && (
-        <form onSubmit={handleCreateAnnouncement} style={{ display: 'grid', gap: '15px', maxWidth: '600px' }}>
-          <div>
-            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Nội dung dòng chữ chạy Marquee:</label>
-            <textarea value={annContent} onChange={(e) => setAnnContent(e.target.value)} rows={3} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Nhập thông báo chữ chạy..."></textarea>
-          </div>
-          <div>
-            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Đường link đính kèm thông báo (Nếu có):</label>
-            <input type="text" value={annExternalLink} onChange={(e) => setAnnExternalLink(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="https://..." />
-          </div>
-          <button type="submit" style={{ background: '#0284c7', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start' }}>
-            📢 Cập Nhật Thông Báo Chữ Chạy
+            📚 Đăng Đề Thi & Giáo Án
           </button>
         </form>
       )}

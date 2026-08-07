@@ -8,6 +8,7 @@ import RightSidebar from './components/RightSidebar';
 import NewsDetailModal from './components/NewsDetailModal';
 import DocumentDetailModal from './components/DocumentDetailModal';
 import QuickUploadModal from './components/QuickUploadModal';
+import RegisterModal from './components/RegisterModal';
 import AdminPortal from './components/AdminPortal';
 import IntroView from './components/IntroView';
 import AlbumsView from './components/AlbumsView';
@@ -68,32 +69,6 @@ const INITIAL_NEWS_LIST = [
     author: 'Tổ KHTN',
     views: 780,
     createdAt: '2026-08-02 14:15:00'
-  },
-  {
-    id: 4,
-    title: 'Giao lưu văn hóa & Học thuật với đoàn Đại biểu Giáo dục quốc tế',
-    slug: 'giao-luu-van-hoa-hoc-thuat',
-    categoryId: 4,
-    categoryName: 'Hoạt động ngoại khóa',
-    summary: 'Chương trình giao lưu Tiếng Anh và trải nghiệm văn hóa truyền thống dành cho học sinh các khối 8 và 9.',
-    content: 'Buổi giao lưu đã mang lại không khí vui tươi, hào hứng cho các em học sinh. Đây là cơ hội tuyệt vời để các em rèn luyện kỹ năng giao tiếp Tiếng Anh và tự tin thể hiện bản sắc văn hóa Việt Nam.',
-    image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80',
-    author: 'Đoàn Đội THCS Đồng Tân',
-    views: 650,
-    createdAt: '2026-08-01 09:00:00'
-  },
-  {
-    id: 5,
-    title: 'Hội thi Giai điệu Tuổi hồng & Ngày hội Thể thao Trường THCS Đồng Tân',
-    slug: 'hoi-thi-giai-dieu-tuoi-hong',
-    categoryId: 3,
-    categoryName: 'Hoạt động đoàn thể',
-    summary: 'Sôi nổi các hoạt động văn nghệ, thể thao chào mừng các ngày lễ lớn của quê hương và đất nước.',
-    content: 'Hội thi tụ hội hơn 20 tiết mục đặc sắc đến từ các chi đội. Ban Giám khảo đánh giá cao sự sáng tạo, tinh thần nhiệt huyết của các thầy cô chủ nhiệm và các em học sinh.',
-    image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80',
-    author: 'Tổng Phụ Trách Đội',
-    views: 1120,
-    createdAt: '2026-07-28 16:00:00'
   }
 ];
 
@@ -119,28 +94,6 @@ const INITIAL_DOCUMENTS = [
     views: 3410,
     downloads: 1205,
     fileUrl: '#'
-  },
-  {
-    id: 3,
-    code: 'KH120/KH-THCSĐT',
-    title: 'Kế hoạch công tác giảng dạy & Bồi dưỡng học sinh giỏi năm học 2026 - 2027',
-    category: 'Kế hoạch Nhà trường',
-    issueDate: '01/08/2026',
-    signer: 'Hiệu trưởng THCS Đồng Tân',
-    views: 2900,
-    downloads: 980,
-    fileUrl: '#'
-  },
-  {
-    id: 4,
-    code: 'HD05/HD-PGDĐT',
-    title: 'Hướng dẫn tổ chức Lễ Khai giảng & Tuần sinh hoạt tập thể đầu năm học',
-    category: 'Hướng dẫn Phòng GD&ĐT',
-    issueDate: '02/08/2026',
-    signer: 'Trưởng Phòng GD&ĐT',
-    views: 1850,
-    downloads: 640,
-    fileUrl: '#'
   }
 ];
 
@@ -151,13 +104,6 @@ const INITIAL_VIDEOS = [
     youtubeId: 'dQw4w9WgXcQ',
     thumbnailUrl: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=600&q=80',
     views: 1540
-  },
-  {
-    id: 2,
-    title: 'Hoạt động trải nghiệm sáng tạo STEM môn Sinh - Hóa lớp 9',
-    youtubeId: 'L_LUpnjgPso',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&q=80',
-    views: 920
   }
 ];
 
@@ -168,15 +114,7 @@ const INITIAL_ALBUMS = [
     date: '05/09/2026',
     photosCount: 18,
     cover: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80',
-    description: 'Hình ảnh rực rỡ cờ hoa trong ngày hội Khai trường chào đón các em học sinh khối 6 mới trúng tuyển.'
-  },
-  {
-    id: 2,
-    title: 'Album: Ngày hội Sáng tạo STEM & Triển lãm Khoa học Kỹ thuật',
-    date: '20/10/2026',
-    photosCount: 24,
-    cover: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&q=80',
-    description: 'Học sinh hào hứng trải nghiệm mô hình tên lửa nước, rô bốt và các sản phẩm khoa học tự làm.'
+    description: 'Hình ảnh rực rỡ cờ hoa trong ngày hội Khai trường.'
   }
 ];
 
@@ -191,30 +129,15 @@ const INITIAL_RESOURCES = [
     downloads: 450,
     fileUrl: '#',
     externalLink: 'https://drive.google.com'
-  },
-  {
-    id: 2,
-    title: 'Giáo án điện tử môn Toán 8: Bài 5 - Phương trình bậc nhất một ẩn',
-    type: 'Giáo án điện tử',
-    subject: 'Toán 8',
-    author: 'Tổ Tự Nhiên',
-    date: '10/11/2026',
-    downloads: 680,
-    fileUrl: '#',
-    externalLink: ''
   }
 ];
 
 const INITIAL_SCHEDULES = [
-  { day: 'Thứ Hai (08/02)', time: '07:30 - 08:15', content: 'Lễ Chào cờ đầu tuần & Tuyên dương thi đua tuần qua', leader: 'Toàn trường' },
-  { day: 'Thứ Ba (09/02)', time: '14:00 - 16:30', content: 'Họp Chuyên môn Tổ Tự Nhiên & Kiểm tra giáo án tuần 22', leader: 'Tổ trưởng Tự nhiên' },
-  { day: 'Thứ Tư (10/02)', time: '08:00 - 11:30', content: 'Tập huấn Chuyển đổi số & Ứng dụng AI trong giảng dạy năm 2026', leader: 'BGH & Phòng GD&ĐT' }
+  { day: 'Thứ Hai (08/02)', time: '07:30 - 08:15', content: 'Lễ Chào cờ đầu tuần & Tuyên dương thi đua tuần qua', leader: 'Toàn trường' }
 ];
 
 const INITIAL_ANNOUNCEMENTS = [
-  { id: 1, content: 'Chào mừng quý phụ huynh và học sinh đến với trang Web chính thức của trường THCS Đồng Tân, Xã Hữu Lũng, Lạng Sơn!' },
-  { id: 2, content: 'Thông báo: Lịch tập trung học sinh toàn trường chuẩn bị cho Lễ Khai giảng năm học 2026 - 2027.' },
-  { id: 3, content: 'Danh sách xếp lớp học sinh khối 6 mới trúng tuyển năm học 2026 - 2027 đã được niêm yết.' }
+  { id: 1, content: 'Chào mừng quý phụ huynh và học sinh đến với trang Web chính thức của trường THCS Đồng Tân, Xã Hữu Lũng, Lạng Sơn!' }
 ];
 
 export default function App() {
@@ -239,9 +162,10 @@ export default function App() {
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
   const [activeDocument, setActiveDocument] = useState(null);
 
-  // Quick Upload Modal State
+  // Quick Upload & Register Modal States
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadDefaultTab, setUploadDefaultTab] = useState('docs');
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   // Admin Auth State
   const [token, setToken] = useState(localStorage.getItem('adminToken') || '');
@@ -296,7 +220,6 @@ export default function App() {
     fetchData();
   }, [selectedCategory]);
 
-  // Dynamic Add New Item Handler: Immediately updates state & opens corresponding tab!
   const handleAddNewItem = (type, newItem) => {
     if (type === 'docs') {
       setDocuments(prev => [newItem, ...prev]);
@@ -419,6 +342,7 @@ export default function App() {
         }} 
         onOpenAdmin={() => setActiveTab('admin')} 
         onOpenUpload={() => handleOpenUpload('docs')}
+        onOpenRegister={() => setShowRegisterModal(true)}
       />
 
       <SubBar announcements={announcements} onSearch={handleSearch} />
@@ -543,6 +467,13 @@ export default function App() {
           categories={categories} 
           onClose={() => setShowUploadModal(false)}
           onAddNewItem={handleAddNewItem}
+        />
+      )}
+
+      {/* Member Registration Modal */}
+      {showRegisterModal && (
+        <RegisterModal 
+          onClose={() => setShowRegisterModal(false)} 
         />
       )}
 

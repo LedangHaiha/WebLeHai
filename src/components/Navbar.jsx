@@ -1,7 +1,7 @@
 import React from 'react';
-import { Home, Info, Newspaper, FileText, Image, Video, BookOpen, Calendar, Mail, ShieldAlert, Upload } from 'lucide-react';
+import { Home, Info, Newspaper, FileText, Image, Video, BookOpen, Calendar, Mail, ShieldAlert, Upload, UserPlus } from 'lucide-react';
 
-export default function Navbar({ activeTab, setActiveTab, onOpenAdmin, onOpenUpload }) {
+export default function Navbar({ activeTab, setActiveTab, onOpenAdmin, onOpenUpload, onOpenRegister }) {
   const navs = [
     { id: 'home', label: 'Trang chủ', icon: <Home size={15} /> },
     { id: 'intro', label: 'Giới thiệu', icon: <Info size={15} /> },
@@ -27,10 +27,16 @@ export default function Navbar({ activeTab, setActiveTab, onOpenAdmin, onOpenUpl
         </a>
       ))}
 
-      {/* Prominent Quick Upload Button directly on Navbar */}
-      <a className="nav-item" style={{ background: '#16a34a', fontWeight: '700', marginLeft: 'auto' }} onClick={onOpenUpload}>
+      {/* Register Member Button */}
+      <a className="nav-item" style={{ background: '#d97706', fontWeight: '700', marginLeft: 'auto' }} onClick={onOpenRegister}>
+        <UserPlus size={15} />
+        <span>👤 Đăng Ký</span>
+      </a>
+
+      {/* Prominent Quick Upload Button */}
+      <a className="nav-item" style={{ background: '#16a34a', fontWeight: '700' }} onClick={onOpenUpload}>
         <Upload size={15} />
-        <span>📤 TẢI NỘI DUNG LÊN</span>
+        <span>📤 Tải Nổi Bật</span>
       </a>
 
       {/* Admin Portal Button */}
