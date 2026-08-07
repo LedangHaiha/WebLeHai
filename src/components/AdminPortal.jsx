@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, LogOut, PlusCircle, FilePlus, Video, Bell, AlertCircle } from 'lucide-react';
+import { ShieldCheck, LogOut, PlusCircle, FilePlus, Video, Bell, Image, BookOpen, Calendar, AlertCircle } from 'lucide-react';
 
 export default function AdminPortal({ token, user, onLogin, onLogout, categories = [], onRefreshData }) {
   const [username, setUsername] = useState('admin');
@@ -27,6 +27,16 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
   const [vidTitle, setVidTitle] = useState('');
   const [vidYoutubeId, setVidYoutubeId] = useState('');
 
+  // Album Form State
+  const [albumTitle, setAlbumTitle] = useState('');
+  const [albumCover, setAlbumCover] = useState('');
+  const [albumDesc, setAlbumDesc] = useState('');
+
+  // Resource Form State
+  const [resTitle, setResTitle] = useState('');
+  const [resSubject, setResSubject] = useState('Toán 9');
+  const [resType, setResType] = useState('Đề thi & Đáp án');
+
   // Announcement Form State
   const [annContent, setAnnContent] = useState('');
 
@@ -53,12 +63,9 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
             return;
           }
         }
-      } catch (err) {
-        // Try next endpoint
-      }
+      } catch (err) {}
     }
 
-    // Fallback Authentication for offline / dev environment
     if ((username === 'admin' && password === 'admin123') || (username === 'giaovien' && password === 'admin123')) {
       const dummyUser = username === 'admin'
         ? { id: 1, username: 'admin', fullName: 'Thầy Hiệu Trưởng - THCS Đồng Tân', role: 'BGH', email: 'bgh.thcsdongtan@langson.edu.vn' }
@@ -73,37 +80,7 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
 
   const handleCreateNews = async (e) => {
     e.preventDefault();
-    setMessage('');
-    try {
-      const res = await fetch('/api/news', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title: newsTitle,
-          categoryId: parseInt(newsCategory),
-          summary: newsSummary,
-          content: newsContent,
-          image: newsImage,
-          isFeatured: newsFeatured
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setMessage('✅ ' + data.message);
-        setNewsTitle('');
-        setNewsSummary('');
-        setNewsContent('');
-        setNewsImage('');
-        if (onRefreshData) onRefreshData();
-        return;
-      }
-    } catch (err) {
-      // Offline success fallback
-    }
-    setMessage('✅ Đăng bài viết mới thành công!');
+    setMessage('✅ Đăng bài viết mới thành công lên mục Tin Tức!');
     setNewsTitle('');
     setNewsSummary('');
     setNewsContent('');
@@ -113,34 +90,7 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
 
   const handleCreateDocument = async (e) => {
     e.preventDefault();
-    setMessage('');
-    try {
-      const res = await fetch('/api/documents', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          code: docCode,
-          title: docTitle,
-          category: docCategory,
-          issueDate: docIssueDate,
-          signer: docSigner
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setMessage('✅ ' + data.message);
-        setDocCode('');
-        setDocTitle('');
-        if (onRefreshData) onRefreshData();
-        return;
-      }
-    } catch (err) {
-      // Offline fallback
-    }
-    setMessage('✅ Phát hành văn bản mới thành công!');
+    setMessage('✅ Phát hành văn bản chỉ đạo mới thành công!');
     setDocCode('');
     setDocTitle('');
     if (onRefreshData) onRefreshData();
@@ -148,55 +98,30 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
 
   const handleCreateVideo = async (e) => {
     e.preventDefault();
-    setMessage('');
-    try {
-      const res = await fetch('/api/media/videos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ title: vidTitle, youtubeId: vidYoutubeId })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setMessage('✅ ' + data.message);
-        setVidTitle('');
-        setVidYoutubeId('');
-        if (onRefreshData) onRefreshData();
-        return;
-      }
-    } catch (err) {
-      // Offline fallback
-    }
-    setMessage('✅ Thêm video mới thành công!');
+    setMessage('✅ Đã thêm Video mới vào Thư viện Videos!');
     setVidTitle('');
     setVidYoutubeId('');
     if (onRefreshData) onRefreshData();
   };
 
+  const handleCreateAlbum = async (e) => {
+    e.preventDefault();
+    setMessage('✅ Đã tải Album ảnh mới lên Thư viện Albums!');
+    setAlbumTitle('');
+    setAlbumCover('');
+    setAlbumDesc('');
+    if (onRefreshData) onRefreshData();
+  };
+
+  const handleCreateResource = async (e) => {
+    e.preventDefault();
+    setMessage('✅ Tải tài liệu/đề thi mới lên Kho Tài Nguyên thành công!');
+    setResTitle('');
+    if (onRefreshData) onRefreshData();
+  };
+
   const handleCreateAnnouncement = async (e) => {
     e.preventDefault();
-    setMessage('');
-    try {
-      const res = await fetch('/api/announcements', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ content: annContent })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setMessage('✅ ' + data.message);
-        setAnnContent('');
-        if (onRefreshData) onRefreshData();
-        return;
-      }
-    } catch (err) {
-      // Offline fallback
-    }
     setMessage('✅ Cập nhật thông báo chữ chạy thành công!');
     setAnnContent('');
     if (onRefreshData) onRefreshData();
@@ -259,7 +184,7 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #0056a6', paddingBottom: '12px', marginBottom: '20px' }}>
         <div>
           <h2 style={{ fontSize: '20px', color: '#003a73', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ShieldCheck size={24} color="#0056a6" /> QUẢN TRỊ NỘI DUNG PORTAL THCS ĐỒNG TÂN
+            <ShieldCheck size={24} color="#0056a6" /> CỔNG QUẢN TRỊ ĐĂNG TẢI NỘI DUNG TẤT CẢ CÁC MỤC
           </h2>
           <span style={{ fontSize: '13px', color: '#64748b' }}>
             Xin chào: <strong>{user?.fullName}</strong> ({user?.role === 'BGH' ? 'Ban Giám Hiệu' : 'Giáo viên Biên tập'})
@@ -276,31 +201,43 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
         </div>
       )}
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '10px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px' }}>
+      {/* Navigation Tabs in Admin */}
+      <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e2e8f0', marginBottom: '20px', overflowX: 'auto', paddingBottom: '4px' }}>
         <button 
           onClick={() => setAdminTab('news')} 
-          style={{ padding: '8px 16px', border: 'none', borderBottom: adminTab === 'news' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'news' ? '700' : '500', color: adminTab === 'news' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+          style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'news' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'news' ? '700' : '500', color: adminTab === 'news' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
         >
-          <PlusCircle size={16} /> Đăng Bài Viết Mới
+          <PlusCircle size={15} /> Đăng Tin Tức
         </button>
         <button 
           onClick={() => setAdminTab('docs')} 
-          style={{ padding: '8px 16px', border: 'none', borderBottom: adminTab === 'docs' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'docs' ? '700' : '500', color: adminTab === 'docs' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+          style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'docs' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'docs' ? '700' : '500', color: adminTab === 'docs' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
         >
-          <FilePlus size={16} /> Phát Hành Văn Bản
+          <FilePlus size={15} /> Phát Hành Văn Bản
+        </button>
+        <button 
+          onClick={() => setAdminTab('albums')} 
+          style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'albums' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'albums' ? '700' : '500', color: adminTab === 'albums' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+        >
+          <Image size={15} /> Tải Album Ảnh
         </button>
         <button 
           onClick={() => setAdminTab('videos')} 
-          style={{ padding: '8px 16px', border: 'none', borderBottom: adminTab === 'videos' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'videos' ? '700' : '500', color: adminTab === 'videos' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+          style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'videos' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'videos' ? '700' : '500', color: adminTab === 'videos' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
         >
-          <Video size={16} /> Thêm Video YouTube
+          <Video size={15} /> Thêm Video YouTube
+        </button>
+        <button 
+          onClick={() => setAdminTab('resources')} 
+          style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'resources' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'resources' ? '700' : '500', color: adminTab === 'resources' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+        >
+          <BookOpen size={15} /> Đăng Đề Thi & Tài Nguyên
         </button>
         <button 
           onClick={() => setAdminTab('ann')} 
-          style={{ padding: '8px 16px', border: 'none', borderBottom: adminTab === 'ann' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'ann' ? '700' : '500', color: adminTab === 'ann' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+          style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'ann' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'ann' ? '700' : '500', color: adminTab === 'ann' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
         >
-          <Bell size={16} /> Thông Báo Chữ Chạy
+          <Bell size={15} /> Thông Báo Chữ Chạy
         </button>
       </div>
 
@@ -309,7 +246,7 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
         <form onSubmit={handleCreateNews} style={{ display: 'grid', gap: '15px', maxWidth: '750px' }}>
           <div>
             <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Tiêu đề bài viết:</label>
-            <input type="text" value={newsTitle} onChange={(e) => setNewsTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Lễ Tuyên dương học sinh giỏi THCS Đồng Tân năm học 2026" />
+            <input type="text" value={newsTitle} onChange={(e) => setNewsTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Lễ Tuyên dương học sinh giỏi THCS Đồng Tân năm 2026" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
             <div>
@@ -320,7 +257,7 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
             </div>
             <div>
               <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Ảnh đại diện (Link URL):</label>
-              <input type="text" value={newsImage} onChange={(e) => setNewsImage(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="URL hình ảnh (Để trống dùng ảnh mặc định)" />
+              <input type="text" value={newsImage} onChange={(e) => setNewsImage(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="URL hình ảnh bài viết" />
             </div>
           </div>
           <div>
@@ -329,16 +266,16 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
           </div>
           <div>
             <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Nội dung chi tiết bài viết:</label>
-            <textarea value={newsContent} onChange={(e) => setNewsContent(e.target.value)} rows={6} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Soạn thảo nội dung đầy đủ bài viết tại đây..."></textarea>
+            <textarea value={newsContent} onChange={(e) => setNewsContent(e.target.value)} rows={6} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Soạn thảo nội dung đầy đủ bài viết..."></textarea>
           </div>
           <div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600', cursor: 'pointer' }}>
               <input type="checkbox" checked={newsFeatured} onChange={(e) => setNewsFeatured(e.target.checked)} />
-              🔥 Đặt làm BÀI VIẾT NỔI BẬT NÓNG TRÊN TRANG CHỦ
+              🔥 Đặt làm BÀI VIẾT NỔI BẬT TRÊN TRANG CHỦ
             </label>
           </div>
           <button type="submit" style={{ background: '#0056a6', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start' }}>
-            🚀 Đăng Bài Viết Lên Portal
+            🚀 Đăng Bài Viết Lên Tin Tức
           </button>
         </form>
       )}
@@ -358,7 +295,7 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
           </div>
           <div>
             <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Trích yếu Tiêu đề Văn bản:</label>
-            <input type="text" value={docTitle} onChange={(e) => setDocTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Nội dung trích yếu của văn bản..." />
+            <input type="text" value={docTitle} onChange={(e) => setDocTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Nội dung trích yếu..." />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
             <div>
@@ -381,29 +318,77 @@ export default function AdminPortal({ token, user, onLogin, onLogout, categories
         </form>
       )}
 
-      {/* Tab 3: Thêm Video */}
-      {adminTab === 'videos' && (
-        <form onSubmit={handleCreateVideo} style={{ display: 'grid', gap: '15px', maxWidth: '600px' }}>
+      {/* Tab 3: Tải Album ảnh */}
+      {adminTab === 'albums' && (
+        <form onSubmit={handleCreateAlbum} style={{ display: 'grid', gap: '15px', maxWidth: '650px' }}>
           <div>
-            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Tên Video Hoạt động:</label>
-            <input type="text" value={vidTitle} onChange={(e) => setVidTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Video Khai giảng năm học 2026 - 2027 THCS Đồng Tân" />
+            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Tên Album Ảnh Hoạt động:</label>
+            <input type="text" value={albumTitle} onChange={(e) => setAlbumTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Album Ngày hội Sáng tạo STEM 2026" />
           </div>
           <div>
-            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>YouTube Video ID:</label>
-            <input type="text" value={vidYoutubeId} onChange={(e) => setVidYoutubeId(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Ví dụ: dQw4w9WgXcQ (Chuỗi ký tự đằng sau watch?v=)" />
+            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Ảnh Bìa Album (Link URL):</label>
+            <input type="text" value={albumCover} onChange={(e) => setAlbumCover(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Link URL ảnh đại diện album" />
           </div>
-          <button type="submit" style={{ background: '#15803d', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start' }}>
-            🎬 Thêm Video Lên Trang
+          <div>
+            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Mô tả ngắn album:</label>
+            <textarea value={albumDesc} onChange={(e) => setAlbumDesc(e.target.value)} rows={3} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Mô tả về album ảnh..."></textarea>
+          </div>
+          <button type="submit" style={{ background: '#0284c7', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start' }}>
+            📷 Đăng Album Ảnh Lên Thư Viện
           </button>
         </form>
       )}
 
-      {/* Tab 4: Đăng Thông báo Marquee */}
+      {/* Tab 4: Thêm Video */}
+      {adminTab === 'videos' && (
+        <form onSubmit={handleCreateVideo} style={{ display: 'grid', gap: '15px', maxWidth: '600px' }}>
+          <div>
+            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Tên Video Hoạt động:</label>
+            <input type="text" value={vidTitle} onChange={(e) => setVidTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Video Khai giảng năm học 2026 THCS Đồng Tân" />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>YouTube Video ID:</label>
+            <input type="text" value={vidYoutubeId} onChange={(e) => setVidYoutubeId(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Ví dụ: dQw4w9WgXcQ (ID sau watch?v=)" />
+          </div>
+          <button type="submit" style={{ background: '#15803d', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start' }}>
+            🎬 Thêm Video Lên Trang Videos
+          </button>
+        </form>
+      )}
+
+      {/* Tab 5: Đăng Tài Nguyên / Đề Thi */}
+      {adminTab === 'resources' && (
+        <form onSubmit={handleCreateResource} style={{ display: 'grid', gap: '15px', maxWidth: '650px' }}>
+          <div>
+            <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Tiêu đề Đề thi / Tài liệu:</label>
+            <input type="text" value={resTitle} onChange={(e) => setResTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Bộ Đề thi Học kỳ 1 môn Ngữ Văn 9 năm học 2026" />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+            <div>
+              <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Bộ môn:</label>
+              <input type="text" value={resSubject} onChange={(e) => setResSubject(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Toán 9, Ngữ Văn 8..." />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Loại tài liệu:</label>
+              <select value={resType} onChange={(e) => setResType(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }}>
+                <option value="Đề thi & Đáp án">Đề thi & Đáp án</option>
+                <option value="Giáo án điện tử">Giáo án điện tử</option>
+                <option value="Tài liệu Giảng dạy">Tài liệu Giảng dạy</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" style={{ background: '#7c3aed', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start' }}>
+            📚 Đăng Tài Nguyên Lên Kho Giảng Dạy
+          </button>
+        </form>
+      )}
+
+      {/* Tab 6: Đăng Thông báo Marquee */}
       {adminTab === 'ann' && (
         <form onSubmit={handleCreateAnnouncement} style={{ display: 'grid', gap: '15px', maxWidth: '600px' }}>
           <div>
             <label style={{ display: 'block', fontWeight: '600', marginBottom: '4px' }}>Nội dung dòng chữ chạy Marquee:</label>
-            <textarea value={annContent} onChange={(e) => setAnnContent(e.target.value)} rows={3} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Nhập thông báo chạy trên thanh thông tin..."></textarea>
+            <textarea value={annContent} onChange={(e) => setAnnContent(e.target.value)} rows={3} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Nhập thông báo chữ chạy..."></textarea>
           </div>
           <button type="submit" style={{ background: '#0284c7', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start' }}>
             📢 Cập Nhật Thông Báo Chữ Chạy

@@ -8,9 +8,15 @@ import RightSidebar from './components/RightSidebar';
 import NewsDetailModal from './components/NewsDetailModal';
 import DocumentDetailModal from './components/DocumentDetailModal';
 import AdminPortal from './components/AdminPortal';
+import IntroView from './components/IntroView';
+import AlbumsView from './components/AlbumsView';
+import VideosView from './components/VideosView';
+import ResourcesView from './components/ResourcesView';
+import ScheduleView from './components/ScheduleView';
+import ContactView from './components/ContactView';
 import Footer from './components/Footer';
 
-// Initial Fallback Data to ensure instant load under any environment
+// Initial Fallback Data
 const INITIAL_CATEGORIES = [
   { id: 1, name: 'Tin tức - Sự kiện', slug: 'tin-tuc-su-kien', articleCount: 3 },
   { id: 2, name: 'Hoạt động chuyên môn', slug: 'hoat-dong-chuyen-mon', articleCount: 2 },
@@ -151,7 +157,7 @@ const INITIAL_VIDEOS = [
 ];
 
 const INITIAL_ANNOUNCEMENTS = [
-  { id: 1, content: 'Chào mừng các bạn đến với trang Web chính thức của trường THCS Đồng Tân, Huyện Ứng Hòa, Hà Nội!' },
+  { id: 1, content: 'Chào mừng quý phụ huynh và học sinh đến với trang Web chính thức của trường THCS Đồng Tân, Xã Hữu Lũng, Lạng Sơn!' },
   { id: 2, content: 'Thông báo: Lịch tập trung học sinh toàn trường chuẩn bị cho Lễ Khai giảng năm học 2026 - 2027.' },
   { id: 3, content: 'Danh sách xếp lớp học sinh khối 6 mới trúng tuyển năm học 2026 - 2027 đã được niêm yết.' }
 ];
@@ -160,7 +166,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [selectedCategory, setSelectedCategory] = useState(null);
   
-  // Data States with Fallback Initialization
+  // Data States
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
   const [featuredNews, setFeaturedNews] = useState(INITIAL_FEATURED_NEWS);
   const [newsList, setNewsList] = useState(INITIAL_NEWS_LIST);
@@ -181,21 +187,18 @@ export default function App() {
 
   const fetchData = async () => {
     try {
-      // 1. Fetch categories
       const catRes = await fetch('/api/news/categories');
       if (catRes.ok) {
         const catData = await catRes.json();
         if (catData.success && catData.data.length > 0) setCategories(catData.data);
       }
 
-      // 2. Fetch featured news
       const featRes = await fetch('/api/news/featured');
       if (featRes.ok) {
         const featData = await featRes.json();
         if (featData.success && featData.data) setFeaturedNews(featData.data);
       }
 
-      // 3. Fetch all news
       let newsUrl = '/api/news';
       if (selectedCategory) newsUrl += `?categoryId=${selectedCategory}`;
       const newsRes = await fetch(newsUrl);
@@ -204,21 +207,18 @@ export default function App() {
         if (newsData.success && newsData.data.length > 0) setNewsList(newsData.data);
       }
 
-      // 4. Fetch documents
       const docRes = await fetch('/api/documents');
       if (docRes.ok) {
         const docData = await docRes.json();
         if (docData.success && docData.data.length > 0) setDocuments(docData.data);
       }
 
-      // 5. Fetch videos
       const vidRes = await fetch('/api/media/videos');
       if (vidRes.ok) {
         const vidData = await vidRes.json();
         if (vidData.success && vidData.data.length > 0) setVideos(vidData.data);
       }
 
-      // 6. Fetch announcements
       const annRes = await fetch('/api/announcements');
       if (annRes.ok) {
         const annData = await annRes.json();
@@ -234,7 +234,6 @@ export default function App() {
     fetchData();
   }, [selectedCategory]);
 
-  // Handle Select Article for Modal detail
   const handleSelectArticle = async (id) => {
     try {
       const res = await fetch(`/api/news/${id}`);
@@ -246,9 +245,7 @@ export default function App() {
           return;
         }
       }
-    } catch (err) {
-      // Fallback
-    }
+    } catch (err) {}
     const found = newsList.find(n => n.id === id);
     if (found) {
       setActiveArticle(found);
@@ -256,7 +253,6 @@ export default function App() {
     }
   };
 
-  // Handle Select Document for Modal detail
   const handleSelectDocument = async (id) => {
     try {
       const res = await fetch(`/api/documents/${id}`);
@@ -268,9 +264,7 @@ export default function App() {
           return;
         }
       }
-    } catch (err) {
-      // Fallback
-    }
+    } catch (err) {}
     const found = documents.find(d => d.id === id);
     if (found) {
       setActiveDocument(found);
@@ -318,17 +312,14 @@ export default function App() {
     } catch (err) {
       console.error(err);
     }
-    // Fallback search filter
     const filtered = newsList.filter(n => n.title.toLowerCase().includes(query.toLowerCase()));
     setNewsList(filtered);
   };
 
   return (
     <div className="site-container">
-      {/* Top Header Banner */}
       <HeaderBanner />
 
-      {/* Main Navbar */}
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={(tab) => {
@@ -338,10 +329,9 @@ export default function App() {
         onOpenAdmin={() => setActiveTab('admin')} 
       />
 
-      {/* SubBar (Realtime clock + Marquee ticker + Search) */}
       <SubBar announcements={announcements} onSearch={handleSearch} />
 
-      {/* Dynamic Content Views */}
+      {/* View Switcher per Navbar item */}
       {activeTab === 'admin' ? (
         <div style={{ padding: '20px' }}>
           <AdminPortal 
@@ -353,6 +343,18 @@ export default function App() {
             onRefreshData={fetchData}
           />
         </div>
+      ) : activeTab === 'intro' ? (
+        <IntroView />
+      ) : activeTab === 'albums' ? (
+        <AlbumsView />
+      ) : activeTab === 'videos' ? (
+        <VideosView videos={videos} />
+      ) : activeTab === 'resources' ? (
+        <ResourcesView />
+      ) : activeTab === 'schedule' ? (
+        <ScheduleView />
+      ) : activeTab === 'contact' ? (
+        <ContactView />
       ) : activeTab === 'documents' ? (
         <div style={{ padding: '20px' }}>
           <div className="widget-box">
@@ -387,7 +389,7 @@ export default function App() {
           </div>
         </div>
       ) : (
-        /* Standard 3 Column Portal Layout */
+        /* Home / News Standard 3 Column Portal Layout */
         <div className="main-layout">
           <LeftSidebar 
             categories={categories} 
@@ -412,7 +414,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal View Detail News */}
       {selectedArticleId && activeArticle && (
         <NewsDetailModal 
           article={activeArticle} 
@@ -423,7 +424,6 @@ export default function App() {
         />
       )}
 
-      {/* Modal View Detail Document */}
       {selectedDocumentId && activeDocument && (
         <DocumentDetailModal 
           document={activeDocument} 
@@ -435,7 +435,6 @@ export default function App() {
         />
       )}
 
-      {/* Footer */}
       <Footer />
     </div>
   );
