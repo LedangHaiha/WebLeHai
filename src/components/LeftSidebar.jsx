@@ -69,8 +69,8 @@ export default function LeftSidebar({ categories = [], latestNews = [], selected
         <div className="widget-body">
           <ul style={{ listStyle: 'none', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <li><a href="http://moet.gov.vn" target="_blank" rel="noreferrer" style={{ color: '#0284c7', textDecoration: 'none' }}>🌐 Bộ Giáo Dục & Đào Tạo</a></li>
-            <li><a href="https://hanoi.edu.vn" target="_blank" rel="noreferrer" style={{ color: '#0284c7', textDecoration: 'none' }}>🌐 Sở GD&ĐT TP. Hà Nội</a></li>
-            <li><a href="#" style={{ color: '#0284c7', textDecoration: 'none' }}>🌐 Phòng GD&ĐT H. Ứng Hòa</a></li>
+            <li><a href="https://langson.edu.vn" target="_blank" rel="noreferrer" style={{ color: '#0284c7', textDecoration: 'none' }}>🌐 Sở GD&ĐT Tỉnh Lạng Sơn</a></li>
+            <li><a href="#" style={{ color: '#0284c7', textDecoration: 'none' }}>🌐 UBND Xã Hữu Lũng</a></li>
           </ul>
         </div>
       </div>

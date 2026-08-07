@@ -7,9 +7,9 @@ export default function Footer() {
         <div className="footer-column">
           <h4>TRƯỜNG THỰC HIỆN CHUYỂN ĐỔI SỐ THCS ĐỒNG TÂN</h4>
           <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#cbd5e1' }}>
-            <strong>Cơ quan chủ quản:</strong> Phòng Giáo Dục và Đào Tạo Huyện Ứng Hòa - Thành phố Hà Nội.<br />
-            <strong>Địa chỉ:</strong> Xã Đồng Tân, Huyện Ứng Hòa, TP. Hà Nội.<br />
-            <strong>Điện thoại BGH:</strong> (024) 3885.6789 | <strong>Email:</strong> c2dongtan-uh@hanoiedu.vn<br />
+            <strong>Cơ quan chủ quản:</strong> Xã Hữu Lũng - Tỉnh Lạng Sơn.<br />
+            <strong>Địa chỉ:</strong> Xã Hữu Lũng, Tỉnh Lạng Sơn.<br />
+            <strong>Điện thoại BGH:</strong> (0205) 3885.6789 | <strong>Email:</strong> thcsdongtan.huulung@langson.edu.vn<br />
             <strong>Chịu trách nhiệm nội dung:</strong> Ban Giám Hiệu Trường THCS Đồng Tân.
           </p>
         </div>
@@ -35,7 +35,7 @@ export default function Footer() {
       </div>
 
       <div className="footer-bottom">
-        Cổng thông tin điện tử Trường THCS Đồng Tân | Phát triển & Vận hành bởi Antigravity Super Agent (2026)
+        Cổng thông tin điện tử Trường THCS Đồng Tân | Xã Hữu Lũng - Tỉnh Lạng Sơn (2026)
       </div>
     </footer>
   );

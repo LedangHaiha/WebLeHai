@@ -13,7 +13,7 @@ export default function HeaderBanner() {
           <h1 className="school-title">TRƯỜNG THCS ĐỒNG TÂN</h1>
           <div className="school-slogan">HỘI TỤ - KẾT TINH - TỎA SÁNG</div>
           <div className="school-address">
-            📍 Địa chỉ: Xã Đồng Tân - Huyện Ứng Hòa - Thành Phố Hà Nội | 📞 Điện thoại: (024) 3885.6789
+            📍 Địa chỉ: Xã Hữu Lũng - Tỉnh Lạng Sơn | 📞 Điện thoại: (0205) 3885.6789
           </div>
         </div>
       </div>
