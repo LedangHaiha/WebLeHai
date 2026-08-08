@@ -1,8 +1,15 @@
 import express from 'express';
 import { query, run } from '../db/database.js';
-import { authGuard } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Helper to extract 11-char YouTube ID from any YouTube URL or string
+function extractYouTubeId(urlOrId) {
+  if (!urlOrId) return '';
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = urlOrId.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : urlOrId.trim();
+}
 
 // GET /api/media/videos
 router.get('/videos', async (req, res) => {
@@ -14,28 +21,43 @@ router.get('/videos', async (req, res) => {
   }
 });
 
-// POST /api/media/videos (Admin Create)
-router.post('/videos', authGuard, async (req, res) => {
+// POST /api/media/videos (Add Video)
+router.post('/videos', async (req, res) => {
   try {
-    const { title, youtubeId, thumbnailUrl } = req.body;
-    if (!title || !youtubeId) {
-      return res.status(400).json({ success: false, message: 'Vui lòng nhập tiêu đề và ID YouTube' });
+    const { title, youtubeId, thumbnailUrl, videoUrl, externalLink } = req.body;
+    if (!title) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập tiêu đề Video' });
     }
 
-    const thumb = thumbnailUrl || `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+    const cleanYoutubeId = extractYouTubeId(youtubeId || externalLink || '');
+    const thumb = thumbnailUrl || (cleanYoutubeId ? `https://img.youtube.com/vi/${cleanYoutubeId}/hqdefault.jpg` : 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=600&q=80');
+
     const result = await run(
-      `INSERT INTO videos (title, youtubeId, thumbnailUrl, views) VALUES (?, ?, ?, ?)`,
-      [title, youtubeId, thumb, 100]
+      `INSERT INTO videos (title, youtubeId, thumbnailUrl, videoUrl, externalLink, views) VALUES (?, ?, ?, ?, ?, ?)`,
+      [title, cleanYoutubeId, thumb, videoUrl || '', externalLink || '', 100]
     );
 
-    res.json({ success: true, message: 'Thêm video mới thành công!', id: result.id });
+    res.json({
+      success: true,
+      message: 'Thêm Video mới thành công!',
+      id: result.id,
+      video: {
+        id: result.id,
+        title,
+        youtubeId: cleanYoutubeId,
+        thumbnailUrl: thumb,
+        videoUrl: videoUrl || '',
+        externalLink: externalLink || '',
+        views: 100
+      }
+    });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Lỗi khi thêm video' });
+    res.status(500).json({ success: false, message: 'Lỗi khi thêm video', error: err.message });
   }
 });
 
-// DELETE /api/media/videos/:id (Admin Delete)
-router.delete('/videos/:id', authGuard, async (req, res) => {
+// DELETE /api/media/videos/:id (Delete Video)
+router.delete('/videos/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await run('DELETE FROM videos WHERE id = ?', [id]);
