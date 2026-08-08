@@ -1,25 +1,34 @@
 import React, { useState } from 'react';
-import { Video, Play, Eye, ExternalLink, Upload } from 'lucide-react';
+import { Video, Play, Eye, ExternalLink, Upload, AlertTriangle } from 'lucide-react';
 
 export default function VideosView({ videos = [], onOpenUpload }) {
   const videoList = videos.length > 0 ? videos : [
     {
       id: 1,
       title: 'Phim tư liệu: 40 năm truyền thống Dạy tốt - Học tốt THCS Đồng Tân',
-      youtubeId: 'dQw4w9WgXcQ',
+      youtubeId: 'k8F4q_N-g_w',
       thumbnailUrl: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=600&q=80',
       views: 1540
     },
     {
       id: 2,
       title: 'Hoạt động trải nghiệm sáng tạo STEM môn Sinh - Hóa lớp 9',
-      youtubeId: 'L_LUpnjgPso',
+      youtubeId: 'dQw4w9WgXcQ',
       thumbnailUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&q=80',
       views: 920
     }
   ];
 
   const [activeVideo, setActiveVideo] = useState(videoList[0]);
+  const [iframeError, setIframeError] = useState(false);
+
+  const handleSelectVideo = (vid) => {
+    setActiveVideo(vid);
+    setIframeError(false);
+  };
+
+  const isLocalVideo = activeVideo?.videoUrl || (activeVideo?.fileUrl && (activeVideo.fileUrl.endsWith('.mp4') || activeVideo.fileUrl.startsWith('/uploads')));
+  const videoSrc = activeVideo?.videoUrl || activeVideo?.fileUrl;
 
   return (
     <div style={{ padding: '20px', maxWidth: '1100px', margin: '0 auto' }}>
@@ -42,10 +51,10 @@ export default function VideosView({ videos = [], onOpenUpload }) {
           {/* Main Active Video Player */}
           {activeVideo && (
             <div style={{ marginBottom: '25px', background: '#000', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
-              {activeVideo.videoUrl ? (
+              {isLocalVideo ? (
                 <video 
                   controls 
-                  src={activeVideo.videoUrl} 
+                  src={videoSrc} 
                   style={{ width: '100%', height: '450px', objectFit: 'contain', background: '#000' }}
                   poster={activeVideo.thumbnailUrl}
                   autoPlay
@@ -54,15 +63,26 @@ export default function VideosView({ videos = [], onOpenUpload }) {
                 <iframe
                   width="100%"
                   height="450"
-                  src={`https://www.youtube.com/embed/${activeVideo.youtubeId}?autoplay=1`}
+                  src={`https://www.youtube.com/embed/${activeVideo.youtubeId}?autoplay=1&rel=0`}
                   title={activeVideo.title}
                   frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
+                  onError={() => setIframeError(true)}
                 ></iframe>
               ) : (
-                <div style={{ padding: '40px', color: 'white', textAlign: 'center' }}>
-                  Không tìm thấy nguồn video
+                <div style={{ padding: '60px 20px', color: 'white', textAlign: 'center', background: '#1e293b' }}>
+                  <AlertTriangle size={40} color="#f59e0b" style={{ marginBottom: '10px' }} />
+                  <h3 style={{ fontSize: '16px', color: '#f59e0b' }}>Không thể tự phát trực tiếp Video này trong trình duyệt</h3>
+                  <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '15px' }}>Vui lòng mở xem trực tiếp trên YouTube bằng nút bên dưới:</p>
+                  <a 
+                    href={activeVideo.externalLink || `https://www.youtube.com/watch?v=${activeVideo.youtubeId}`} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    style={{ background: '#ef4444', color: 'white', textDecoration: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <ExternalLink size={16} /> Mở Trực Tiếp Trên YouTube
+                  </a>
                 </div>
               )}
               
@@ -76,16 +96,14 @@ export default function VideosView({ videos = [], onOpenUpload }) {
                   </span>
                 </div>
 
-                {activeVideo.externalLink && (
-                  <a 
-                    href={activeVideo.externalLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ background: '#ef4444', color: 'white', textDecoration: 'none', padding: '6px 14px', borderRadius: '4px', fontSize: '12.5px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}
-                  >
-                    <ExternalLink size={14} /> Mở YouTube
-                  </a>
-                )}
+                <a 
+                  href={activeVideo.externalLink || (activeVideo.youtubeId ? `https://www.youtube.com/watch?v=${activeVideo.youtubeId}` : '#')}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ background: '#ef4444', color: 'white', textDecoration: 'none', padding: '8px 16px', borderRadius: '4px', fontSize: '13px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <ExternalLink size={15} /> Mở Trang YouTube Gốc
+                </a>
               </div>
             </div>
           )}
@@ -99,7 +117,7 @@ export default function VideosView({ videos = [], onOpenUpload }) {
             {videoList.map(vid => (
               <div 
                 key={vid.id}
-                onClick={() => setActiveVideo(vid)}
+                onClick={() => handleSelectVideo(vid)}
                 style={{ 
                   border: activeVideo?.id === vid.id ? '2px solid #0056a6' : '1px solid #cbd5e1', 
                   borderRadius: '6px', 

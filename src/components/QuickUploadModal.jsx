@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { X, Upload, FilePlus, BookOpen, Newspaper, Image, Video, Calendar, CheckCircle } from 'lucide-react';
+import { X, Upload, FilePlus, BookOpen, Newspaper, Image, Video, CheckCircle } from 'lucide-react';
+
+// Robust YouTube ID Extractor
+function extractYouTubeId(urlOrId) {
+  if (!urlOrId) return '';
+  const str = urlOrId.trim();
+  if (str.length === 11 && !str.includes('/') && !str.includes('.')) {
+    return str;
+  }
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = str.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : '';
+}
 
 export default function QuickUploadModal({ defaultTab = 'docs', categories = [], onClose, onAddNewItem }) {
   const [activeType, setActiveType] = useState(defaultTab);
@@ -131,13 +143,17 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
       };
 
     } else if (activeType === 'videos') {
+      const extractedYtId = extractYouTubeId(youtubeId || externalLink || '');
+      const isLocalVideoFile = fileUrl.endsWith('.mp4') || fileUrl.endsWith('.webm') || fileUrl.endsWith('.mov') || fileUrl.startsWith('/uploads');
+      
       newItem = {
         id: newItemId,
-        title: title || 'Video hoạt động mới',
-        youtubeId: youtubeId || 'dQw4w9WgXcQ',
-        thumbnailUrl: fileUrl || `https://img.youtube.com/vi/${youtubeId || 'dQw4w9WgXcQ'}/hqdefault.jpg`,
+        title: title || 'Video hoạt động trường học mới',
+        youtubeId: extractedYtId,
+        videoUrl: isLocalVideoFile ? fileUrl : (fileUrl || ''),
+        thumbnailUrl: isLocalVideoFile ? 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=600&q=80' : (extractedYtId ? `https://img.youtube.com/vi/${extractedYtId}/hqdefault.jpg` : 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=600&q=80'),
         views: 1,
-        externalLink: externalLink || ''
+        externalLink: externalLink || (extractedYtId ? `https://www.youtube.com/watch?v=${extractedYtId}` : '')
       };
 
       try {
@@ -147,21 +163,13 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
           body: JSON.stringify(newItem)
         });
       } catch (err) {}
-
-    } else if (activeType === 'schedule') {
-      newItem = {
-        day: 'Thứ Bảy (08/08)',
-        time: '08:00 - 11:30',
-        content: title || 'Lịch làm việc mới vừa cập nhật',
-        leader: author || 'Ban Giám Hiệu'
-      };
     }
 
     if (onAddNewItem && newItem) {
       onAddNewItem(activeType, newItem);
     }
 
-    setMessage('✅ Đã xuất hiện thành công trong mục tương ứng!');
+    setMessage('✅ Đã tải Video lên thành công và hiển thị live!');
     setTimeout(() => {
       onClose();
     }, 800);
@@ -172,7 +180,7 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
       <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '780px' }}>
         <div className="modal-header" style={{ background: '#16a34a' }}>
           <span style={{ fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Upload size={18} /> 📤 ĐĂNG TẢI NỘI DUNG VÀO MỤC TƯƠNG ỨNG
+            <Upload size={18} /> 📤 ĐĂNG TẢI NỘI DUNG VÀ VIDEO MỚI
           </span>
           <button className="close-btn" onClick={onClose}><X size={20} /></button>
         </div>
@@ -186,6 +194,13 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
 
           {/* Section Type Buttons */}
           <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '10px', marginBottom: '20px', borderBottom: '1px solid #cbd5e1' }}>
+            <button 
+              type="button"
+              onClick={() => setActiveType('videos')} 
+              style={{ padding: '8px 12px', border: 'none', background: activeType === 'videos' ? '#0056a6' : '#f1f5f9', color: activeType === 'videos' ? 'white' : '#334155', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}
+            >
+              <Video size={14} /> 🎬 Video YouTube / Tệp MP4
+            </button>
             <button 
               type="button"
               onClick={() => setActiveType('docs')} 
@@ -214,17 +229,24 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
             >
               <Image size={14} /> 📷 Album ảnh
             </button>
-            <button 
-              type="button"
-              onClick={() => setActiveType('videos')} 
-              style={{ padding: '8px 12px', border: 'none', background: activeType === 'videos' ? '#0056a6' : '#f1f5f9', color: activeType === 'videos' ? 'white' : '#334155', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap' }}
-            >
-              <Video size={14} /> 🎬 Video YouTube
-            </button>
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            {/* 1. Upload Form for Documents */}
+            {/* Form for Videos */}
+            {activeType === 'videos' && (
+              <>
+                <div>
+                  <label style={{ display: 'block', fontWeight: '700', fontSize: '13px', marginBottom: '4px' }}>Tiêu đề Video hoạt động:</label>
+                  <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Video Khai giảng năm học 2026 - 2027 THCS Đồng Tân" />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontWeight: '700', fontSize: '13px', marginBottom: '4px' }}>Đường link Video YouTube (Hoặc dán ID YouTube):</label>
+                  <input type="text" value={youtubeId} onChange={(e) => setYoutubeId(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Dán link full: https://www.youtube.com/watch?v=... hoặc mã ID" />
+                </div>
+              </>
+            )}
+
+            {/* Form for Documents */}
             {activeType === 'docs' && (
               <>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
@@ -245,7 +267,7 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
               </>
             )}
 
-            {/* 2. Upload Form for Resources */}
+            {/* Form for Resources */}
             {activeType === 'resources' && (
               <>
                 <div>
@@ -269,16 +291,12 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
               </>
             )}
 
-            {/* 3. Upload Form for News */}
+            {/* Form for News */}
             {activeType === 'news' && (
               <>
                 <div>
                   <label style={{ display: 'block', fontWeight: '700', fontSize: '13px', marginBottom: '4px' }}>Tiêu đề bài viết:</label>
                   <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Nhập tiêu đề bài viết..." />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontWeight: '700', fontSize: '13px', marginBottom: '4px' }}>Tóm tắt ngắn:</label>
-                  <textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={2} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Tóm tắt ngắn..."></textarea>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontWeight: '700', fontSize: '13px', marginBottom: '4px' }}>Nội dung chi tiết bài viết:</label>
@@ -287,52 +305,28 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
               </>
             )}
 
-            {/* 4. Upload Form for Albums */}
-            {activeType === 'albums' && (
-              <>
-                <div>
-                  <label style={{ display: 'block', fontWeight: '700', fontSize: '13px', marginBottom: '4px' }}>Tên Album Ảnh:</label>
-                  <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: Album Lễ Khai Giảng THCS Đồng Tân" />
-                </div>
-              </>
-            )}
-
-            {/* 5. Upload Form for Videos */}
-            {activeType === 'videos' && (
-              <>
-                <div>
-                  <label style={{ display: 'block', fontWeight: '700', fontSize: '13px', marginBottom: '4px' }}>Tiêu đề Video hoạt động:</label>
-                  <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Tên video..." />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontWeight: '700', fontSize: '13px', marginBottom: '4px' }}>YouTube Video ID (ví dụ: dQw4w9WgXcQ):</label>
-                  <input type="text" value={youtubeId} onChange={(e) => setYoutubeId(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="ID video YouTube..." />
-                </div>
-              </>
-            )}
-
-            {/* File Upload Box (Available for ALL types!) */}
+            {/* File Upload Box (Supports Video MP4, Documents, Images) */}
             <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
               <h4 style={{ fontSize: '13.5px', color: '#0056a6', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '700' }}>
-                <Upload size={16} /> BỘ TẢI LÊN TỆP TIN TỪ MÁY TÍNH & CHÈN LINK
+                <Upload size={16} /> TẢI TỆP NỘI DUNG / VIDEO (.MP4 / .PDF / .DOCX / .ZIP) TỪ MÁY TÍNH
               </h4>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', marginBottom: '4px', color: '#334155' }}>
-                    1. Chọn tệp từ máy (.PDF / .DOCX / .ZIP / .PNG):
+                    1. Chọn tệp từ máy (.MP4 / .PDF / .DOCX):
                   </label>
                   <input 
                     type="file" 
                     onChange={(e) => handleFileUpload(e.target.files[0])} 
                     style={{ fontSize: '12px', border: '1px solid #cbd5e1', padding: '4px', borderRadius: '4px', width: '100%', background: 'white' }} 
                   />
-                  {fileUrl && <div style={{ fontSize: '11.5px', color: '#16a34a', marginTop: '4px', fontWeight: '600' }}>✓ Đã tải tệp: {fileUrl}</div>}
+                  {fileUrl && <div style={{ fontSize: '11.5px', color: '#16a34a', marginTop: '4px', fontWeight: '600' }}>✓ Đã chọn tệp: {fileUrl}</div>}
                 </div>
 
                 <div>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', marginBottom: '4px', color: '#334155' }}>
-                    2. Hoặc dán đường link (Drive / YouTube / Web):
+                    2. Hoặc dán đường link liên kết ngoài:
                   </label>
                   <input 
                     type="text" 
